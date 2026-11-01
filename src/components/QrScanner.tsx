@@ -4,7 +4,7 @@ import { decodeCanvas } from '../lib/qr-decode';
 type State = 'idle' | 'starting' | 'scanning' | 'error';
 
 /** 카메라로 QR을 계속 읽다가, onText가 true를 돌려주면 멈춘다 */
-export function QrScanner({ onText }: { onText: (text: string) => boolean }) {
+export function QrScanner({ onText, onFallback }: { onText: (text: string) => boolean; onFallback: () => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
   const [state, setState] = useState<State>('idle');
@@ -22,8 +22,8 @@ export function QrScanner({ onText }: { onText: (text: string) => boolean }) {
       setState('error');
       setError(
         window.isSecureContext
-          ? '이 브라우저에서는 카메라를 쓸 수 없어요. "사진에서 찾기"로 확인해 주세요.'
-          : '카메라는 https 주소에서만 쓸 수 있어요. "사진에서 찾기"로 확인해 주세요.',
+          ? '이 브라우저에서는 카메라 화면을 바로 쓸 수 없어요. 아래 "카메라로 찍기"로 확인해 주세요.'
+          : '카메라 화면은 https 주소에서만 쓸 수 있어요. 아래 "카메라로 찍기"로 확인해 주세요.',
       );
       return;
     }
@@ -45,10 +45,10 @@ export function QrScanner({ onText }: { onText: (text: string) => boolean }) {
       const name = (e as DOMException)?.name;
       setError(
         name === 'NotAllowedError'
-          ? '카메라 사용이 막혀 있어요. 주소창 옆 설정에서 카메라를 허용하거나 "사진에서 찾기"를 써 주세요.'
+          ? '카메라 권한을 받지 못했어요. 화면 위에 떠 있는 다른 앱의 버튼·말풍선·화면 필터를 끄고 다시 눌러 보거나, 주소창 왼쪽 설정에서 카메라를 허용해 주세요. 권한 없이 쓰려면 아래 "카메라로 찍기"를 눌러요.'
           : name === 'NotFoundError'
-            ? '카메라를 찾지 못했어요. "사진에서 찾기"로 확인해 주세요.'
-            : '카메라를 켜지 못했어요. 다시 눌러 보거나 "사진에서 찾기"를 써 주세요.',
+            ? '카메라를 찾지 못했어요. 아래 "카메라로 찍기"로 확인해 주세요.'
+            : '카메라를 켜지 못했어요. 다시 눌러 보거나 아래 "카메라로 찍기"를 써 주세요.',
       );
     }
   };
@@ -110,7 +110,14 @@ export function QrScanner({ onText }: { onText: (text: string) => boolean }) {
           카메라 끄기
         </button>
       )}
-      {state === 'error' && <p className="form-error">{error}</p>}
+      {state === 'error' && (
+        <>
+          <p className="form-error">{error}</p>
+          <button type="button" className="btn btn-gold" onClick={onFallback}>
+            📸 카메라로 찍기 (권한 필요 없음)
+          </button>
+        </>
+      )}
     </div>
   );
 }

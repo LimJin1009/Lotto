@@ -11,7 +11,7 @@ type Tab = 'camera' | 'photo' | 'manual';
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'camera', label: '📷 QR 찍기' },
-  { id: 'photo', label: '🖼️ 사진에서 찾기' },
+  { id: 'photo', label: '📸 사진으로' },
   { id: 'manual', label: '✍️ 직접 입력' },
 ];
 
@@ -140,6 +140,7 @@ function PhotoPicker({ onText }: { onText: (t: string) => boolean }) {
       setError('사진을 열지 못했어요. 다른 사진으로 해 주세요.');
     } finally {
       setBusy(false);
+      document.querySelectorAll<HTMLInputElement>('.photo-actions input').forEach((el) => (el.value = ''));
       if (input.current) input.current.value = '';
     }
   };
@@ -149,11 +150,23 @@ function PhotoPicker({ onText }: { onText: (t: string) => boolean }) {
       <span className="scanner-icon" aria-hidden>
         🖼️
       </span>
-      <p>앨범에 있는 복권 사진에서 QR 코드를 찾아요. 사진은 이 기기 밖으로 보내지 않아요.</p>
-      <label className={`btn btn-gold${busy ? ' btn-busy' : ''}`}>
-        {busy ? 'QR 찾는 중…' : '사진 고르기'}
-        <input ref={input} type="file" accept="image/*" hidden disabled={busy} onChange={(e) => pick(e.target.files?.[0])} />
-      </label>
+      <p>휴대폰 카메라로 복권을 찍거나 앨범에 있는 사진을 고르면 QR 코드를 찾아요. 사진은 이 기기 밖으로 보내지 않아요.</p>
+      {busy ? (
+        <span className="btn btn-gold btn-busy">QR 찾는 중…</span>
+      ) : (
+        <div className="photo-actions">
+          {/* capture: 사이트 카메라 권한 없이 휴대폰 기본 카메라 앱으로 바로 찍음 */}
+          <label className="btn btn-gold">
+            📸 카메라로 찍기
+            <input type="file" accept="image/*" capture="environment" hidden onChange={(e) => pick(e.target.files?.[0])} />
+          </label>
+          <label className="btn">
+            🖼️ 앨범에서 고르기
+            <input ref={input} type="file" accept="image/*" hidden onChange={(e) => pick(e.target.files?.[0])} />
+          </label>
+        </div>
+      )}
+      <p className="photo-tip">QR이 사진 가운데에 크고 선명하게 나오게 찍어 주세요.</p>
       {error && <p className="form-error">{error}</p>}
     </div>
   );
@@ -236,7 +249,7 @@ export function CheckPage() {
               </button>
             ))}
           </div>
-          {tab === 'camera' && <QrScanner onText={onQr} />}
+          {tab === 'camera' && <QrScanner onText={onQr} onFallback={() => setTab('photo')} />}
           {tab === 'camera' && notLotto && <p className="form-error">로또 복권 QR이 아니에요. 복권 오른쪽 위의 QR을 비춰 주세요.</p>}
           {tab === 'photo' && <PhotoPicker onText={onQr} />}
           {tab === 'manual' && <ManualInput onCheck={setTicket} />}
