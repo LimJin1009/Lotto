@@ -7,7 +7,8 @@ import { formatWon, manualTicket, parseLottoQr } from './ticket';
 describe('복권 QR 해석', () => {
   it('공식 주소 형식', () => {
     const t = parseLottoQr('https://dhlottery.co.kr/qr.do?method=winQr&v=1248q243032353738');
-    expect(t).toEqual({ round: 1248, source: 'qr', games: [{ label: 'A', type: '자동', nums: [24, 30, 32, 35, 37, 38] }] });
+    expect(t).toMatchObject({ round: 1248, source: 'qr', games: [{ label: 'A', type: '자동', nums: [24, 30, 32, 35, 37, 38] }] });
+    expect(t!.raw).toContain('v=1248q');
   });
 
   it('여러 게임, 자동·수동·반자동, 뒤의 일련번호는 무시', () => {

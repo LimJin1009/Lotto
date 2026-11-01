@@ -5,24 +5,27 @@ import { DrawMachine, type MachineApi } from '../components/DrawMachine';
 import { DreamOptions, type DreamChoice } from '../components/options/DreamOptions';
 import { PersonalOptions } from '../components/options/PersonalOptions';
 import { StatsOptions } from '../components/options/StatsOptions';
+import { WishOptions } from '../components/options/WishOptions';
 import { pushResult, ResultList } from '../components/ResultCard';
 import { DREAMS, dreamNumbers } from '../lib/dream';
 import { drawTime, formatDate, rankOf } from '../lib/draws';
 import { extractPicks, personalNumbers, type PersonalInput } from '../lib/personal';
 import { randInt, randomNumbers } from '../lib/random';
 import { statsNumbers, type StatsStrategy } from '../lib/stats';
+import { normalizeWish, wishNumbers } from '../lib/wish';
 import type { Draw, GenResult } from '../lib/types';
 
-type Mode = 'random' | 'dream' | 'personal' | 'stats';
+type Mode = 'random' | 'dream' | 'personal' | 'wish' | 'stats';
 
 const MODES: { id: Mode; emoji: string; label: string }[] = [
   { id: 'dream', emoji: '🌙', label: '꿈 해몽' },
   { id: 'personal', emoji: '🎂', label: '나만의 숫자' },
+  { id: 'wish', emoji: '✍️', label: '이름·소원' },
   { id: 'stats', emoji: '📈', label: '통계' },
   { id: 'random', emoji: '🎱', label: '자동 추첨' },
 ];
 
-const SOON = ['🔮 오늘의 운세', '✍️ 이름·소원 문장', '💞 궁합 번호', '📷 복권 QR 확인', '🏆 당첨 인증 후기'];
+const SOON = ['🔮 오늘의 운세', '💞 궁합 번호', '🎬 추첨 영상 저장'];
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -103,6 +106,7 @@ export function HomePage() {
   });
   const [personal, setPersonal] = useState<PersonalInput[]>([{ kind: 'birthday', value: '' }]);
   const [strategy, setStrategy] = useState<StatsStrategy>('hot');
+  const [wish, setWish] = useState('');
 
   const api = useRef<MachineApi | null>(null);
   const machineBox = useRef<HTMLElement>(null);
@@ -122,11 +126,16 @@ export function HomePage() {
 
   const usablePersonal = personal.filter((i) => extractPicks(i).length > 0);
   const notReady =
-    mode === 'dream' && !dream.dream ? '꿈을 먼저 골라 주세요' : mode === 'personal' && usablePersonal.length === 0 ? '숫자를 먼저 넣어 주세요' : null;
+    mode === 'dream' && !dream.dream ? '꿈을 먼저 골라 주세요' : mode === 'personal' && usablePersonal.length === 0
+        ? '숫자를 먼저 넣어 주세요'
+        : mode === 'wish' && !normalizeWish(wish)
+          ? '문장을 먼저 써 주세요'
+          : null;
 
   const build = (): GenResult => {
     if (mode === 'dream' && dream.dream) return dreamNumbers(dream.dream, dream.sit ?? undefined);
     if (mode === 'personal') return personalNumbers(usablePersonal);
+    if (mode === 'wish') return wishNumbers(wish);
     if (mode === 'stats') return statsNumbers(draws, strategy);
     return randomResult();
   };
@@ -192,6 +201,7 @@ export function HomePage() {
         {mode === 'random' && <p className="opt-q">아무것도 넣지 않고 추첨기가 공 6개를 자동으로 뽑아요.</p>}
         {mode === 'dream' && <DreamOptions value={dream} onChange={setDream} />}
         {mode === 'personal' && <PersonalOptions value={personal} onChange={setPersonal} />}
+        {mode === 'wish' && <WishOptions value={wish} onChange={setWish} />}
         {mode === 'stats' && <StatsOptions value={strategy} onChange={setStrategy} lastNo={latest.no} />}
       </section>
 

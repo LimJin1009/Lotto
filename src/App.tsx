@@ -4,12 +4,14 @@ import { InstallButton } from './components/InstallSheet';
 import { buildLabel, useUpdateAvailable } from './lib/version';
 import { CheckPage } from './pages/CheckPage';
 import { HomePage } from './pages/HomePage';
+import { ReviewsPage } from './pages/ReviewsPage';
 import { SavedPage } from './pages/SavedPage';
 import { StatsPage } from './pages/StatsPage';
 
 const TABS = [
   { path: '/', label: '번호 추첨', icon: '🎱' },
   { path: '/check', label: '당첨 확인', icon: '🔍' },
+  { path: '/reviews', label: '당첨 후기', icon: '🏆' },
   { path: '/saved', label: '내 번호함', icon: '🗂️' },
   { path: '/stats', label: '통계', icon: '📊' },
 ];
@@ -18,6 +20,8 @@ function page(route: string) {
   switch (route) {
     case '/check':
       return <CheckPage />;
+    case '/reviews':
+      return <ReviewsPage />;
     case '/saved':
       return <SavedPage />;
     case '/stats':

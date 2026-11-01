@@ -1,8 +1,9 @@
-export type MethodId = 'dream' | 'personal' | 'stats' | 'machine' | 'ticket';
+export type MethodId = 'dream' | 'personal' | 'wish' | 'stats' | 'machine' | 'ticket';
 
 export const METHOD_LABEL: Record<MethodId, string> = {
   dream: '꿈 해몽',
   personal: '나만의 숫자',
+  wish: '이름·소원',
   stats: '통계 분석',
   machine: '자동 추첨',
   ticket: '산 복권',

@@ -16,6 +16,8 @@ export interface Ticket {
   round: number;
   games: TicketGame[];
   source: 'qr' | 'manual';
+  /** QR에서 읽은 글자 그대로 (후기 올릴 때 서버가 다시 확인) */
+  raw?: string;
 }
 
 const TYPE: Record<string, GameType> = { q: '자동', m: '수동', s: '반자동' };
@@ -39,7 +41,7 @@ export function parseLottoQr(text: string): Ticket | null {
     games.push({ label: LABELS[games.length] ?? String(games.length + 1), type: TYPE[m[1].toLowerCase()] ?? '', nums: nums.sort((a, b) => a - b) });
     if (games.length === 5) break;
   }
-  return games.length ? { round, games, source: 'qr' } : null;
+  return games.length ? { round, games, source: 'qr', raw } : null;
 }
 
 export function manualTicket(round: number, nums: number[]): Ticket {

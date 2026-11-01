@@ -146,3 +146,25 @@ describe('통계 분석', () => {
     for (const n of BUNDLED.at(-1)!.nums) expect(g[n]).toBe(0);
   });
 });
+
+import { charNumber, wishNumbers } from './wish';
+
+describe('이름·소원 번호', () => {
+  it('같은 문장은 같은 번호, 띄어쓰기는 무시', () => {
+    const a = wishNumbers('올해 집 사자');
+    expectValidSet(a);
+    expect(wishNumbers('올해집사자!').numbers).toEqual(a.numbers);
+    expect(wishNumbers('올해 차 사자').numbers).not.toEqual(a.numbers);
+  });
+
+  it('글자마다 숫자가 들어가고 이유가 붙는다', () => {
+    const r = wishNumbers('집');
+    expectValidSet(r);
+    expect(r.numbers).toContain(charNumber('집'));
+    expect(r.reasons[charNumber('집')]).toBe("'집' 글자에서 나온 숫자");
+  });
+
+  it('긴 문장도 6개만', () => {
+    expectValidSet(wishNumbers('우리 가족 모두 건강하고 행복하게 해 주세요'));
+  });
+});

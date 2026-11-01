@@ -202,7 +202,7 @@ h2 small {
   width: 100%;
   max-width: 560px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   background: var(--surface);
   border-top: 1px solid var(--line);
   padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
@@ -809,22 +809,25 @@ h2 small {
 
 .modes {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
 }
 
 .mode {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 4px;
   padding: 10px 2px;
   border-radius: 14px;
   border: 1.5px solid var(--line);
   background: var(--surface);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
-  white-space: nowrap;
+  line-height: 1.25;
+  text-align: center;
+  word-break: keep-all;
 }
 
 .mode-emoji {
@@ -1494,4 +1497,138 @@ h2 small {
 .version {
   opacity: 0.6;
   font-variant-numeric: tabular-nums;
+}
+
+/* ── 당첨 후기 ── */
+.seg-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.review-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff3c4 0%, #ffe08a 100%);
+  color: #4d3a00;
+}
+
+.review-stats strong {
+  font-size: 17px;
+}
+
+.review-stats span {
+  font-size: 13px;
+  color: #6b5200;
+}
+
+.reviews {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.review-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.review-meta {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.review-when {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.badge-rank {
+  background: color-mix(in srgb, var(--gold) 22%, transparent);
+  color: #8a6400;
+}
+
+.badge-rank-1 {
+  background: linear-gradient(135deg, #ffd54a, #f7b500);
+  color: #3d2a00;
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge-rank {
+    color: #ffd76a;
+  }
+  .badge-rank-1 {
+    color: #3d2a00;
+  }
+}
+
+.review-balls {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.review-method {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.review-body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.review-nick {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 2px solid color-mix(in srgb, var(--gold) 60%, transparent);
+}
+
+.review-form h3 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 96px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
 }

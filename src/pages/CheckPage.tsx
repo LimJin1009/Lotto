@@ -6,6 +6,9 @@ import { drawTime, formatDate, rankOf } from '../lib/draws';
 import { decodeFile } from '../lib/qr-decode';
 import { isSameSet } from '../lib/saved';
 import { CLAIM_PLACE, fetchPrizes, formatWon, manualTicket, parseLottoQr, type Ticket } from '../lib/ticket';
+import { rememberNickname, reviewsEnabled, savedNickname, submitReview } from '../lib/reviews';
+import { METHOD_LABEL } from '../lib/types';
+import { go } from '../router';
 
 type Tab = 'camera' | 'photo' | 'manual';
 
@@ -119,9 +122,86 @@ function TicketResult({ ticket, onReset }: { ticket: Ticket; onReset: () => void
       <button type="button" className="btn btn-primary" disabled={unsaved.length === 0} onClick={saveAll}>
         {unsaved.length === 0 ? '✓ 번호함에 있음' : `${ticket.games.length}게임 번호함에 저장`}
       </button>
+
+      {best && reviewsEnabled &&
+        (ticket.source === 'qr' && ticket.raw ? (
+          <ReviewForm ticket={ticket} ranks={ranks} />
+        ) : (
+          <p className="muted-text">🏆 당첨 후기는 복권 QR로 확인한 경우에만 남길 수 있어요. 직접 입력은 누구나 당첨번호를 넣을 수 있어서요.</p>
+        ))}
     </section>
   );
 }
+
+/** 당첨 후기 쓰기: 등수 판정과 중복 확인은 서버가 다시 한다 */
+function ReviewForm({ ticket, ranks }: { ticket: Ticket; ranks: number[] }) {
+  const { saved, toast } = useApp();
+  const winners = ticket.games
+    .map((g, i) => ({ g, rank: ranks[i] }))
+    .filter((x) => x.rank > 0)
+    .sort((a, b) => a.rank - b.rank);
+  const [game, setGame] = useState(winners[0]?.g.label ?? 'A');
+  const [nickname, setNickname] = useState(savedNickname);
+  const [content, setContent] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const chosen = ticket.games.find((g) => g.label === game)!;
+  // 찐번호에서 뽑아 번호함에 저장해 둔 번호면 어떤 방식으로 뽑았는지 같이 올림
+  const fromApp = saved.find((s) => s.method !== 'ticket' && isSameSet(s.numbers, chosen.nums));
+  const method = fromApp ? `${METHOD_LABEL[fromApp.method]}(으)로 뽑은 번호 · ${fromApp.title}`.slice(0, 60) : null;
+
+  const submit = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      await submitReview({ qr: ticket.raw!, game, nickname: nickname.trim(), content: content.trim(), method });
+      rememberNickname(nickname.trim());
+      toast('후기를 올렸어요. 축하해요! 🎉');
+      go('/reviews');
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const ok = nickname.trim().length >= 1 && content.trim().length >= 5;
+  return (
+    <div className="review-form">
+      <h3>🏆 당첨 후기 남기기</h3>
+      <p className="muted-text">QR로 확인한 당첨이라 "QR 인증" 표시가 붙어요. 같은 복권은 한 번만 올릴 수 있어요.</p>
+      {winners.length > 1 && (
+        <div className="chips">
+          {winners.map(({ g, rank }) => (
+            <button key={g.label} type="button" className={`chip chip-sm${game === g.label ? ' chip-on' : ''}`} onClick={() => setGame(g.label)}>
+              {g.label}게임 · {rank}등
+            </button>
+          ))}
+        </div>
+      )}
+      {method && <p className="review-method">🎯 {method}</p>}
+      <input className="input" maxLength={12} placeholder="닉네임 (12자까지)" value={nickname} onChange={(e) => setNickname(e.target.value)} aria-label="닉네임" />
+      <textarea
+        className="input textarea"
+        maxLength={300}
+        rows={4}
+        placeholder="어떻게 뽑은 번호인지, 당첨됐을 때 기분을 남겨 주세요 (5~300자)"
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        aria-label="후기 내용"
+      />
+      <div className="form-row">
+        <span className="muted-text">{content.trim().length}/300</span>
+        <button type="button" className="btn btn-gold" disabled={!ok || busy} onClick={submit}>
+          {busy ? '올리는 중…' : '후기 올리기'}
+        </button>
+      </div>
+      {error && <p className="form-error">{error}</p>}
+    </div>
+  );
+}
+
 
 function PhotoPicker({ onText }: { onText: (t: string) => boolean }) {
   const [busy, setBusy] = useState(false);
