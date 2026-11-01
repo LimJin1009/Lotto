@@ -4,6 +4,46 @@ import { DREAMS, dreamNumbers } from './dream';
 import { extractPicks, personalNumbers } from './personal';
 import { gaps, isBalanced, statsNumbers } from './stats';
 import type { GenResult } from './types';
+import { C, R, BR, extractBall, makeWorld, stepWorld } from './machine';
+
+describe('추첨기', () => {
+  it('바람을 켜면 공이 통 전체로 날아다니고 밖으로 안 나간다', () => {
+    const w = makeWorld();
+    w.mixing = true;
+    let t = 0;
+    let topSum = 0;
+    let speedSum = 0;
+    for (let s = 0; s < 600; s++) {
+      stepWorld(w, (t += 1000 / 60));
+      if (s >= 120) {
+        topSum += w.balls.filter((b) => b.y < C - R * 0.3).length;
+        speedSum += w.balls.reduce((a, b) => a + Math.hypot(b.vx, b.vy), 0) / w.balls.length;
+      }
+      for (const b of w.balls) expect(Math.hypot(b.x - C, b.y - C)).toBeLessThan(R - BR + 1);
+    }
+    expect(topSum / 480).toBeGreaterThan(8); // 위쪽에도 평균 8개 넘게 떠 있음
+    expect(speedSum / 480).toBeGreaterThan(3);
+  });
+
+  it('정해진 번호의 공이 출구로 빠져나간다', async () => {
+    const w = makeWorld();
+    w.mixing = true;
+    let t = 0;
+    for (let s = 0; s < 120; s++) stepWorld(w, (t += 1000 / 60));
+    let done = false;
+    const p = extractBall(w, 7, t).then(() => (done = true));
+    let steps = 0;
+    while (!done && steps < 200) {
+      stepWorld(w, (t += 1000 / 60));
+      steps++;
+      await Promise.resolve();
+    }
+    await p;
+    expect(steps).toBeLessThan(100); // 1.7초 안에 나옴
+    expect(w.balls.find((b) => b.n === 7)).toBeUndefined();
+    expect(w.balls).toHaveLength(44);
+  });
+});
 
 function expectValidSet(r: GenResult) {
   expect(r.numbers).toHaveLength(6);

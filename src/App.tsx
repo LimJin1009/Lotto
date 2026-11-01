@@ -1,34 +1,17 @@
 import { useApp } from './app-context';
 import { useRoute } from './router';
 import { HomePage } from './pages/HomePage';
-import { MakePage } from './pages/MakePage';
-import { DreamPage } from './pages/DreamPage';
-import { PersonalPage } from './pages/PersonalPage';
-import { StatsGenPage } from './pages/StatsGenPage';
-import { MachinePage } from './pages/MachinePage';
 import { SavedPage } from './pages/SavedPage';
 import { StatsPage } from './pages/StatsPage';
 
 const TABS = [
-  { path: '/', label: '홈', icon: '🏠' },
-  { path: '/make', label: '번호 만들기', icon: '✨' },
-  { path: '/machine', label: '추첨기', icon: '🎱' },
+  { path: '/', label: '번호 추첨', icon: '🎱' },
   { path: '/saved', label: '내 번호함', icon: '🗂️' },
   { path: '/stats', label: '통계', icon: '📊' },
 ];
 
 function page(route: string) {
   switch (route) {
-    case '/make':
-      return <MakePage />;
-    case '/make/dream':
-      return <DreamPage />;
-    case '/make/personal':
-      return <PersonalPage />;
-    case '/make/stats':
-      return <StatsGenPage />;
-    case '/machine':
-      return <MachinePage />;
     case '/saved':
       return <SavedPage />;
     case '/stats':

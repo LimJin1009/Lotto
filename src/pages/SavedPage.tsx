@@ -63,7 +63,7 @@ export function SavedPage() {
       {saved.length === 0 && (
         <div className="card empty">
           <p>아직 저장한 번호가 없어요.</p>
-          <a href="#/make" className="btn btn-primary">
+          <a href="#/" className="btn btn-primary">
             번호 만들러 가기
           </a>
         </div>
