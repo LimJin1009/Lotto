@@ -35,5 +35,6 @@ function seoPages(): Plugin {
 
 export default defineConfig({
   plugins: [react(), seoPages()],
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) },
   base: './',
 });

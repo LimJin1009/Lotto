@@ -1,6 +1,7 @@
 import { useApp } from './app-context';
 import { useRoute } from './router';
 import { InstallButton } from './components/InstallSheet';
+import { buildLabel, useUpdateAvailable } from './lib/version';
 import { CheckPage } from './pages/CheckPage';
 import { HomePage } from './pages/HomePage';
 import { SavedPage } from './pages/SavedPage';
@@ -31,6 +32,7 @@ export function App() {
   const { toastMsg, saved, round } = useApp();
   const active = TABS.slice(1).find((t) => route.startsWith(t.path))?.path ?? '/';
   const waiting = saved.filter((s) => s.drawNo === round).length;
+  const update = useUpdateAvailable();
 
   return (
     <div className="app">
@@ -42,12 +44,23 @@ export function App() {
         <InstallButton />
       </header>
 
+      {update && (
+        <div className="update-bar" role="status">
+          <span>✨ 새 버전이 나왔어요</span>
+          <button type="button" className="btn btn-gold" onClick={() => location.reload()}>
+            업데이트
+          </button>
+        </div>
+      )}
+
       <main className="main">{page(route)}</main>
 
       <footer className="disclaimer">
         재미로 보는 번호예요. 어떤 방법으로 만들어도 모든 번호 조합의 당첨 확률은 같습니다 (1등 8,145,060분의 1).
         <br />
         당첨번호 출처: 동행복권 결과를 모은 공개 데이터 · 정확한 결과는 동행복권(dhlottery.co.kr)에서 확인하세요.
+        <br />
+        <span className="version">버전 {buildLabel()}</span>
       </footer>
 
       <nav className="tabbar" aria-label="메뉴">

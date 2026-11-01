@@ -70,3 +70,13 @@ describe('QR 이미지 읽기', () => {
     expect(t.games[0].nums).toEqual([16, 18, 27, 36, 38, 42]);
   });
 });
+
+describe('새 버전 확인', () => {
+  it('첫 화면 HTML에서 앱 파일 이름을 찾는다', async () => {
+    (globalThis as { __BUILD_TIME__?: string }).__BUILD_TIME__ = '2026-11-01T01:52:00.000Z';
+    const { scriptName, buildLabel } = await import('./version');
+    expect(scriptName('<script type="module" crossorigin src="./assets/index-CoUz35dZ.js"></script>')).toBe('assets/index-CoUz35dZ.js');
+    expect(scriptName('<html></html>')).toBeNull();
+    expect(buildLabel()).toBe('11.01 10:52');
+  });
+});
