@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <radialGradient id="bg" cx="30%" cy="40%" r="90%">
+      <stop offset="0" stop-color="#34446e"/>
+      <stop offset="1" stop-color="#121a2c"/>
+    </radialGradient>
+    <radialGradient id="body" cx="50%" cy="50%" r="50%" fx="34%" fy="28%">
+      <stop offset="0" stop-color="#ffe9a0"/>
+      <stop offset="0.48" stop-color="#ffbe0b"/>
+      <stop offset="1" stop-color="#c07f00"/>
+    </radialGradient>
+    <radialGradient id="bounce" cx="72%" cy="84%" r="34%">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="face" cx="44%" cy="38%" r="62%">
+      <stop offset="0.6" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dfe5ee"/>
+    </radialGradient>
+    <radialGradient id="spec" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#000" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <!-- 작은 공 6개용 색 -->
+    <radialGradient id="b1" fx="34%" fy="28%"><stop offset="0" stop-color="#ffe27a"/><stop offset="0.45" stop-color="#f7b500"/><stop offset="1" stop-color="#a86f00"/></radialGradient>
+    <radialGradient id="b2" fx="34%" fy="28%"><stop offset="0" stop-color="#9ad8ff"/><stop offset="0.45" stop-color="#2b95e0"/><stop offset="1" stop-color="#0f4f8f"/></radialGradient>
+    <radialGradient id="b3" fx="34%" fy="28%"><stop offset="0" stop-color="#ffa29a"/><stop offset="0.45" stop-color="#ec4a45"/><stop offset="1" stop-color="#8f1c1f"/></radialGradient>
+    <radialGradient id="b4" fx="34%" fy="28%"><stop offset="0" stop-color="#d9dde4"/><stop offset="0.45" stop-color="#8d94a1"/><stop offset="1" stop-color="#454b57"/></radialGradient>
+    <radialGradient id="b5" fx="34%" fy="28%"><stop offset="0" stop-color="#d4f28a"/><stop offset="0.45" stop-color="#7cbc2c"/><stop offset="1" stop-color="#3c6b0d"/></radialGradient>
+    <g id="mini">
+      <circle r="17" fill="#fff"/>
+      <ellipse cx="-12" cy="-16" rx="12" ry="6.5" fill="url(#spec)" transform="rotate(-30 -12 -16)"/>
+    </g>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- 큰 공 -->
+  <ellipse cx="300" cy="540" rx="190" ry="32" fill="url(#shadow)"/>
+  <circle cx="300" cy="300" r="225" fill="url(#body)"/>
+  <circle cx="300" cy="300" r="225" fill="url(#bounce)"/>
+  <circle cx="300" cy="300" r="136" fill="url(#face)"/>
+  <circle cx="300" cy="300" r="136" fill="none" stroke="#000" stroke-opacity="0.1" stroke-width="2"/>
+  <text x="300" y="362" text-anchor="middle" font-family="Malgun Gothic, sans-serif" font-weight="700" font-size="176" fill="#18203a">찐</text>
+  <ellipse cx="0" cy="0" rx="106" ry="58" fill="url(#spec)" transform="translate(220 175) rotate(-30)"/>
+  <circle cx="300" cy="300" r="224" fill="none" stroke="#000" stroke-opacity="0.18" stroke-width="3"/>
+
+  <!-- 글 -->
+  <text x="610" y="232" font-family="Malgun Gothic, sans-serif" font-weight="700" font-size="92" fill="#ffffff" letter-spacing="-3">로또 찐번호</text>
+  <text x="614" y="310" font-family="Malgun Gothic, sans-serif" font-size="34" fill="#c9d2e6">꿈 해몽·생일·통계로 뽑는 내 번호</text>
+  <text x="614" y="358" font-family="Malgun Gothic, sans-serif" font-size="34" fill="#c9d2e6">복권 QR 찍으면 당첨 확인까지</text>
+
+  <!-- 작은 공 6개 -->
+  <g font-family="Malgun Gothic, sans-serif" font-weight="700" font-size="25" text-anchor="middle" fill="#18203a">
+    <g transform="translate(650 460)"><circle r="34" fill="url(#b1)"/><circle r="20" fill="#fff"/><text y="9">7</text><ellipse cx="-12" cy="-17" rx="12" ry="6" fill="url(#spec)" transform="rotate(-30 -12 -17)"/></g>
+    <g transform="translate(736 460)"><circle r="34" fill="url(#b2)"/><circle r="20" fill="#fff"/><text y="9">14</text><ellipse cx="-12" cy="-17" rx="12" ry="6" fill="url(#spec)" transform="rotate(-30 -12 -17)"/></g>
+    <g transform="translate(822 460)"><circle r="34" fill="url(#b3)"/><circle r="20" fill="#fff"/><text y="9">23</text><ellipse cx="-12" cy="-17" rx="12" ry="6" fill="url(#spec)" transform="rotate(-30 -12 -17)"/></g>
+    <g transform="translate(908 460)"><circle r="34" fill="url(#b4)"/><circle r="20" fill="#fff"/><text y="9">32</text><ellipse cx="-12" cy="-17" rx="12" ry="6" fill="url(#spec)" transform="rotate(-30 -12 -17)"/></g>
+    <g transform="translate(994 460)"><circle r="34" fill="url(#b3)"/><circle r="20" fill="#fff"/><text y="9">28</text><ellipse cx="-12" cy="-17" rx="12" ry="6" fill="url(#spec)" transform="rotate(-30 -12 -17)"/></g>
+    <g transform="translate(1080 460)"><circle r="34" fill="url(#b5)"/><circle r="20" fill="#fff"/><text y="9">43</text><ellipse cx="-12" cy="-17" rx="12" ry="6" fill="url(#spec)" transform="rotate(-30 -12 -17)"/></g>
+  </g>
+</svg>
