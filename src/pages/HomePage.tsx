@@ -16,10 +16,10 @@ import type { Draw, GenResult } from '../lib/types';
 type Mode = 'random' | 'dream' | 'personal' | 'stats';
 
 const MODES: { id: Mode; emoji: string; label: string }[] = [
-  { id: 'random', emoji: '🎱', label: '무작위' },
   { id: 'dream', emoji: '🌙', label: '꿈 해몽' },
   { id: 'personal', emoji: '🎂', label: '나만의 숫자' },
   { id: 'stats', emoji: '📈', label: '통계' },
+  { id: 'random', emoji: '🎱', label: '자동 추첨' },
 ];
 
 const SOON = ['🔮 오늘의 운세', '✍️ 이름·소원 문장', '💞 궁합 번호', '📷 복권 QR 확인', '🏆 당첨 인증 후기'];
@@ -38,8 +38,8 @@ function shuffle<T>(list: T[]): T[] {
 function randomResult(): GenResult {
   const numbers = randomNumbers(6).sort((a, b) => a - b);
   const reasons: Record<number, string> = {};
-  for (const n of numbers) reasons[n] = '추첨기에서 무작위로 나온 공';
-  return { method: 'machine', emoji: '🎱', title: '무작위 추첨 번호', numbers, reasons };
+  for (const n of numbers) reasons[n] = '자동 추첨으로 나온 공';
+  return { method: 'machine', emoji: '🎱', title: '자동 추첨 번호', numbers, reasons };
 }
 
 function countdown(ms: number) {
@@ -185,7 +185,7 @@ export function HomePage() {
             </button>
           ))}
         </div>
-        {mode === 'random' && <p className="opt-q">추첨기에서 공 6개를 무작위로 뽑아요.</p>}
+        {mode === 'random' && <p className="opt-q">아무것도 넣지 않고 추첨기가 공 6개를 자동으로 뽑아요.</p>}
         {mode === 'dream' && <DreamOptions value={dream} onChange={setDream} />}
         {mode === 'personal' && <PersonalOptions value={personal} onChange={setPersonal} />}
         {mode === 'stats' && <StatsOptions value={strategy} onChange={setStrategy} lastNo={latest.no} />}

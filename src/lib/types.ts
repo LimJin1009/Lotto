@@ -4,7 +4,7 @@ export const METHOD_LABEL: Record<MethodId, string> = {
   dream: '꿈 해몽',
   personal: '나만의 숫자',
   stats: '통계 분석',
-  machine: '무작위 추첨',
+  machine: '자동 추첨',
 };
 
 /** 번호 생성 결과 한 세트 */
