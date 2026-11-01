@@ -2,7 +2,7 @@
 // - 화면(HTML): 인터넷 먼저, 안 되면 저장본
 // - 같은 사이트의 파일(JS·CSS·아이콘): 저장본 먼저 (파일 이름에 버전이 붙어 있음)
 // - 다른 사이트(당첨번호 데이터, 글꼴): 건드리지 않음
-const CACHE = 'lotto-v1';
+const CACHE = 'lotto-v2';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest', './icon-192.png'])).then(() => self.skipWaiting()));
@@ -24,14 +24,17 @@ self.addEventListener('fetch', (e) => {
   if (url.origin !== self.location.origin) return;
 
   if (req.mode === 'navigate') {
+    // 앱 첫 화면과 꿈 페이지를 각자 주소로 저장 (꿈 페이지가 앱 화면을 덮어쓰지 않게)
     e.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('./', copy));
+          if (res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE).then((c) => c.put(req, copy));
+          }
           return res;
         })
-        .catch(() => caches.match('./')),
+        .catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match('./'))),
     );
     return;
   }

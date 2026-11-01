@@ -6,7 +6,7 @@ import { DreamOptions, type DreamChoice } from '../components/options/DreamOptio
 import { PersonalOptions } from '../components/options/PersonalOptions';
 import { StatsOptions } from '../components/options/StatsOptions';
 import { pushResult, ResultList } from '../components/ResultCard';
-import { dreamNumbers } from '../lib/dream';
+import { DREAMS, dreamNumbers } from '../lib/dream';
 import { drawTime, formatDate, rankOf } from '../lib/draws';
 import { extractPicks, personalNumbers, type PersonalInput } from '../lib/personal';
 import { randInt, randomNumbers } from '../lib/random';
@@ -96,7 +96,11 @@ function LatestDraw({ latest }: { latest: Draw }) {
 export function HomePage() {
   const { draws, latest } = useApp();
   const [mode, setMode] = useState<Mode>('dream');
-  const [dream, setDream] = useState<DreamChoice>({ dream: null, sit: null });
+  // 꿈 페이지의 "추첨기로 뽑기"에서 오면 (#/?dream=pig) 그 꿈이 골라진 채로 시작
+  const [dream, setDream] = useState<DreamChoice>(() => {
+    const id = new URLSearchParams(location.hash.split('?')[1] ?? '').get('dream');
+    return { dream: DREAMS.find((d) => d.id === id) ?? null, sit: null };
+  });
   const [personal, setPersonal] = useState<PersonalInput[]>([{ kind: 'birthday', value: '' }]);
   const [strategy, setStrategy] = useState<StatsStrategy>('hot');
 

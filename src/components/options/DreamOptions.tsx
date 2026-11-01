@@ -13,7 +13,12 @@ export function DreamOptions({ value, onChange }: { value: DreamChoice; onChange
 
   return (
     <div className="opt">
-      <p className="opt-q">어젯밤 어떤 꿈을 꾸셨나요?</p>
+      <p className="opt-q opt-q-row">
+        어젯밤 어떤 꿈을 꾸셨나요?
+        <a href="./dream/" className="link-btn">
+          꿈 해몽 전체 보기
+        </a>
+      </p>
       <div className="chips" role="tablist">
         {DREAM_CATEGORIES.map((c) => (
           <button key={c} type="button" role="tab" aria-selected={cat === c} className={`chip chip-sm${cat === c ? ' chip-on' : ''}`} onClick={() => setCat(c)}>

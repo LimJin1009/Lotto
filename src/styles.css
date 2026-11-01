@@ -1410,3 +1410,27 @@ h2 small {
 .photo-tip {
   font-size: 12.5px !important;
 }
+
+.opt-q-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 앱이 뜨기 전 잠깐 보이는 소개 글 (검색 로봇용) */
+.seo-static {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.seo-static h1 {
+  color: var(--ink);
+  font-size: 22px;
+  margin-bottom: 10px;
+}
