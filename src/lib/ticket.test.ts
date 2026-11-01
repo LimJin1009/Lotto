@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import QRCode from 'qrcode';
-import { decodeImageData } from './qr-decode';
+import { readFileSync } from 'node:fs';
+import { decodeImageData, initZxing } from './qr-decode';
 import { formatWon, manualTicket, parseLottoQr } from './ticket';
 
 describe('복권 QR 해석', () => {
@@ -40,7 +41,10 @@ describe('복권 QR 해석', () => {
 });
 
 describe('QR 이미지 읽기', () => {
-  it('QR 그림에서 글자를 읽어 해석까지 된다', async () => {
+  it('QR 그림에서 글자를 읽어 해석까지 된다 (ZXing)', async () => {
+    const wasm = readFileSync('node_modules/zxing-wasm/dist/reader/zxing_reader.wasm');
+    const z = await initZxing({ wasmBinary: wasm.buffer.slice(wasm.byteOffset, wasm.byteOffset + wasm.byteLength) as ArrayBuffer });
+    expect(z).not.toBeNull();
     const text = 'https://dhlottery.co.kr/qr.do?method=winQr&v=1248q161827363842m010203040506';
     const qr = QRCode.create(text, { errorCorrectionLevel: 'M' });
     const size = qr.modules.size;

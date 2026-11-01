@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { decodeImageData, detectNative } from '../lib/qr-decode';
+import { decodeImageData, detectNative, hasNativeDetector, initZxing } from '../lib/qr-decode';
 
 type State = 'idle' | 'starting' | 'scanning' | 'error';
 
@@ -22,6 +22,8 @@ export function QrScanner({ onText, onFallback }: { onText: (text: string) => bo
   const [caps, setCaps] = useState<CamCaps>({});
   const [zoom, setZoom] = useState<number | null>(null);
   const [torch, setTorch] = useState(false);
+  /** 원인 파악용: 어떤 인식기와 해상도로 읽는 중인지 */
+  const [info, setInfo] = useState('');
 
   const track = () => stream.current?.getVideoTracks()[0];
 
@@ -52,6 +54,7 @@ export function QrScanner({ onText, onFallback }: { onText: (text: string) => bo
       return;
     }
     setState('starting');
+    const zx = initZxing(); // 인식기를 카메라 켜는 동안 미리 받아 둠
     try {
       const s = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
@@ -75,6 +78,10 @@ export function QrScanner({ onText, onFallback }: { onText: (text: string) => bo
       }
       await apply(settings);
 
+      const ready = await zx;
+      const zoomText = c.zoom ? `줌 ${settings.zoom ?? 1}배` : '줌 없음';
+      const focusText = settings.focusMode ? '자동 초점' : '초점 기본';
+      setInfo(`${v.videoWidth}×${v.videoHeight} · ${[hasNativeDetector() && '기본 인식', ready ? 'ZXing' : 'jsQR'].filter(Boolean).join('+')} · ${zoomText} · ${focusText}`);
       setState('scanning');
       loop();
     } catch (e) {
@@ -101,11 +108,11 @@ export function QrScanner({ onText, onFallback }: { onText: (text: string) => bo
         n++;
         // 1) 휴대폰 기본 QR 인식으로 원본 화면 통째로 (빠르고 흐린 QR에도 강함)
         let text = await detectNative(v);
-        // 2) 없으면 jsQR: 네모 안(70%)을 높은 해상도로, 가끔은 화면 전체를 반전까지 시도
+        // 2) 없으면 ZXing: 네모 안(70%)을 원본 해상도 그대로, 세 번에 한 번은 화면 전체를 꼼꼼히
         if (!text) {
           const full = n % 3 === 0;
           const side = full ? Math.min(v.videoWidth, v.videoHeight) : Math.min(v.videoWidth, v.videoHeight) * 0.7;
-          const target = Math.min(side, full ? 900 : 1000);
+          const target = Math.min(side, full ? 1280 : 1400);
           canvas.width = canvas.height = Math.round(target);
           const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
           ctx.drawImage(v, (v.videoWidth - side) / 2, (v.videoHeight - side) / 2, side, side, 0, 0, canvas.width, canvas.height);
@@ -118,7 +125,7 @@ export function QrScanner({ onText, onFallback }: { onText: (text: string) => bo
           return;
         }
       }
-      setTimeout(tick, 120);
+      setTimeout(tick, 60);
     };
     tick();
   };
@@ -186,6 +193,7 @@ export function QrScanner({ onText, onFallback }: { onText: (text: string) => bo
           </button>
         </div>
       )}
+      {on && info && <p className="scanner-info">{info}</p>}
       {on && (
         <p className="scanner-tip">
           계속 안 읽히면{' '}

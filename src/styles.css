@@ -1459,3 +1459,11 @@ h2 small {
   color: var(--ink-2);
   word-break: break-all;
 }
+
+.scanner-info {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-2);
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
