@@ -1,7 +1,84 @@
 // 공기식 추첨기 그리기. 번호는 밖에서 먼저 정하고, 여기서는 그 공을 꺼내는 모습만 보여준다.
 import { useEffect, useRef } from 'react';
 import { BR, C, extractBall, makeWorld, R, SIZE, stepWorld, type PBall } from '../lib/machine';
-import { ballColor } from './Ball';
+import { ballColor, ballPalette } from './Ball';
+
+/** 광택 플라스틱 공 한 개를 미리 그려 둔다 (CSS의 .ball과 같은 모양) */
+function makeBallSprite(n: number, dpr: number): HTMLCanvasElement {
+  const pad = 3;
+  const size = (BR + pad) * 2;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = Math.ceil(size * dpr);
+  const c = cv.getContext('2d')!;
+  c.scale(dpr, dpr);
+  const x = size / 2;
+  const y = size / 2;
+  const r = BR;
+  const p = ballPalette(n);
+
+  // 바닥 그림자
+  c.beginPath();
+  c.ellipse(x, y + r * 0.92, r * 0.72, r * 0.2, 0, 0, Math.PI * 2);
+  c.fillStyle = 'rgba(0,0,0,0.22)';
+  c.fill();
+
+  // 구 음영
+  const body = c.createRadialGradient(x - r * 0.3, y - r * 0.38, 0, x, y, r);
+  body.addColorStop(0, p.light);
+  body.addColorStop(0.42, p.base);
+  body.addColorStop(1, p.dark);
+  c.beginPath();
+  c.arc(x, y, r, 0, Math.PI * 2);
+  c.fillStyle = body;
+  c.fill();
+
+  // 오른쪽 아래 반사광
+  const bounce = c.createRadialGradient(x + r * 0.42, y + r * 0.62, 0, x + r * 0.42, y + r * 0.62, r * 0.55);
+  bounce.addColorStop(0, 'rgba(255,255,255,0.35)');
+  bounce.addColorStop(1, 'rgba(255,255,255,0)');
+  c.fillStyle = bounce;
+  c.fill();
+
+  // 흰 숫자 원
+  const face = c.createRadialGradient(x - r * 0.12, y - r * 0.18, 0, x, y, r * 0.6);
+  face.addColorStop(0.55, '#ffffff');
+  face.addColorStop(1, '#e3e8ef');
+  c.beginPath();
+  c.arc(x, y, r * 0.6, 0, Math.PI * 2);
+  c.fillStyle = face;
+  c.fill();
+  c.lineWidth = 0.5;
+  c.strokeStyle = 'rgba(0,0,0,0.12)';
+  c.stroke();
+
+  c.fillStyle = '#18203a';
+  c.font = `800 ${r * 0.78}px 'Pretendard Variable', Pretendard, sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(String(n), x - 0.2, y + 0.7);
+
+  // 표면 반사광 (숫자 원 위로도 지나감)
+  c.save();
+  c.translate(x - r * 0.34, y - r * 0.5);
+  c.rotate(-0.5);
+  const spec = c.createRadialGradient(0, 0, 0, 0, 0, r * 0.42);
+  spec.addColorStop(0, 'rgba(255,255,255,0.95)');
+  spec.addColorStop(1, 'rgba(255,255,255,0)');
+  c.scale(1, 0.55);
+  c.beginPath();
+  c.arc(0, 0, r * 0.42, 0, Math.PI * 2);
+  c.fillStyle = spec;
+  c.fill();
+  c.restore();
+
+  // 그림자 쪽 테두리
+  c.beginPath();
+  c.arc(x, y, r - 0.4, 0, Math.PI * 2);
+  c.lineWidth = 0.8;
+  c.strokeStyle = 'rgba(0,0,0,0.18)';
+  c.stroke();
+  return cv;
+}
 
 export interface MachineApi {
   setMixing: (on: boolean) => void;
@@ -38,6 +115,13 @@ export function DrawMachine({ apiRef }: { apiRef: React.RefObject<MachineApi | n
     cv.height = SIZE * dpr;
     ctx.scale(dpr, dpr);
     let raf = 0;
+    const sprites: HTMLCanvasElement[] = [];
+    const paintSprites = () => {
+      for (let n = 1; n <= 45; n++) sprites[n] = makeBallSprite(n, dpr);
+    };
+    paintSprites();
+    // 글꼴이 늦게 받아지면 숫자를 다시 그림
+    document.fonts?.ready.then(paintSprites);
 
     const drawBall = (b: PBall) => {
       const color = ballColor(b.n);
@@ -54,24 +138,9 @@ export function DrawMachine({ apiRef }: { apiRef: React.RefObject<MachineApi | n
         ctx.stroke();
         ctx.globalAlpha = 1;
       }
-      // 실제 로또 공처럼: 색 공 + 가운데 흰 원 + 숫자
-      const g = ctx.createRadialGradient(b.x - 5, b.y - 6, 1, b.x, b.y, BR);
-      g.addColorStop(0, 'rgba(255,255,255,0.9)');
-      g.addColorStop(0.35, color);
-      g.addColorStop(1, color);
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, BR, 0, Math.PI * 2);
-      ctx.fillStyle = g;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(b.x, b.y, 7.6, 0, Math.PI * 2);
-      ctx.fillStyle = '#fff';
-      ctx.fill();
-      ctx.fillStyle = '#1f2a44';
-      ctx.font = '800 9.5px Pretendard Variable, Pretendard, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(String(b.n), b.x, b.y + 0.5);
+      const sprite = sprites[b.n];
+      const half = sprite.width / dpr / 2;
+      ctx.drawImage(sprite, b.x - half, b.y - half, half * 2, half * 2);
     };
 
     const draw = () => {
