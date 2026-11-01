@@ -5,7 +5,7 @@ import { isSameSet } from '../lib/saved';
 import { Ball, BallRow } from './Ball';
 
 export function shareText(r: GenResult): string {
-  return `${r.emoji} ${r.title}\n${r.numbers.join('  ')}\n\n오늘의 번호에서 ${METHOD_LABEL[r.method]}(으)로 만든 번호예요 (재미로 보는 번호)\n${location.href.split('#')[0]}`;
+  return `${r.emoji} ${r.title}\n${r.numbers.join('  ')}\n\n로또 찐번호에서 ${METHOD_LABEL[r.method]}(으)로 만든 번호예요 (재미로 보는 번호)\n${location.href.split('#')[0]}`;
 }
 
 export async function share(r: GenResult, toast: (m: string) => void) {

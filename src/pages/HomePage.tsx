@@ -192,7 +192,7 @@ export function HomePage() {
       </section>
 
       <section className="machine" ref={machineBox}>
-        <div className="machine-title">{running && current ? `${current.emoji} ${current.title}` : '오늘의 번호 추첨기'}</div>
+        <div className="machine-title">{running && current ? `${current.emoji} ${current.title}` : '로또 찐번호 추첨기'}</div>
         <DrawMachine apiRef={api} />
         <div className="tray" aria-live="polite">
           {Array.from({ length: 6 }, (_, i) => (

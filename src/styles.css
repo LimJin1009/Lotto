@@ -129,7 +129,7 @@ h2 small {
   width: 100%;
   max-width: 560px;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   background: var(--surface);
   border-top: 1px solid var(--line);
   padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
@@ -1033,6 +1033,293 @@ h2 small {
 @media (prefers-reduced-motion: reduce) {
   .ball-pop,
   .toast {
+    animation: none;
+  }
+}
+
+/* ── 당첨 확인 ── */
+.seg-full {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.seg-full button {
+  padding: 9px 4px;
+  white-space: nowrap;
+}
+
+.form-error {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--primary);
+}
+
+.scanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.scanner-view {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  max-height: 420px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 35%, var(--navy-2) 0%, var(--navy) 80%);
+  color: #fff;
+}
+
+.scanner-view video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.scanner-on video {
+  opacity: 1;
+}
+
+.scanner-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 62%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 18px;
+  box-shadow: 0 0 0 999px rgba(10, 14, 26, 0.45);
+  border: 3px solid var(--gold);
+}
+
+.scanner-frame::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  top: 10%;
+  background: var(--gold);
+  box-shadow: 0 0 10px var(--gold);
+  animation: scan-line 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes scan-line {
+  to {
+    top: 90%;
+  }
+}
+
+.scanner-hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  padding: 0 16px;
+}
+
+.scanner-idle,
+.photo-pick {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 24px;
+}
+
+.scanner-idle {
+  position: absolute;
+  inset: 0;
+}
+
+.scanner-idle p,
+.photo-pick p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  max-width: 260px;
+}
+
+.photo-pick p {
+  color: var(--ink-2);
+}
+
+.scanner-icon {
+  font-size: 40px;
+}
+
+.btn-busy {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.manual {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.manual-round {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.manual-round .input {
+  flex: none;
+  width: 110px;
+  text-align: center;
+}
+
+.num-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+
+.num {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--surface-2);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.num-on {
+  border-color: transparent;
+  background: transparent;
+}
+
+.num-on .ball {
+  --size: 100%;
+  width: 100%;
+  height: 100%;
+}
+
+.manual-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.verdict {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.verdict strong {
+  font-size: 20px;
+  letter-spacing: -0.02em;
+}
+
+.verdict span {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.verdict-win {
+  background: linear-gradient(135deg, #fff3c4 0%, #ffe08a 100%);
+  color: #4d3a00;
+}
+
+.verdict-win span {
+  color: #6b5200;
+}
+
+.verdict-wait {
+  background: color-mix(in srgb, var(--navy-2) 12%, var(--surface));
+}
+
+.games {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.game {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  grid-template-areas: 'label balls rank' 'label prize rank';
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.game:first-child {
+  border-top: 0;
+}
+
+.game-label {
+  grid-area: label;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.game-label small {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.game-balls {
+  grid-area: balls;
+  display: flex;
+  gap: 3px;
+}
+
+.game-prize {
+  grid-area: prize;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--win);
+}
+
+.game-rank {
+  grid-area: rank;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.game-win .game-rank {
+  color: var(--win);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanner-frame::after {
     animation: none;
   }
 }

@@ -1,17 +1,21 @@
 import { useApp } from './app-context';
 import { useRoute } from './router';
+import { CheckPage } from './pages/CheckPage';
 import { HomePage } from './pages/HomePage';
 import { SavedPage } from './pages/SavedPage';
 import { StatsPage } from './pages/StatsPage';
 
 const TABS = [
   { path: '/', label: '번호 추첨', icon: '🎱' },
+  { path: '/check', label: '당첨 확인', icon: '🔍' },
   { path: '/saved', label: '내 번호함', icon: '🗂️' },
   { path: '/stats', label: '통계', icon: '📊' },
 ];
 
 function page(route: string) {
   switch (route) {
+    case '/check':
+      return <CheckPage />;
     case '/saved':
       return <SavedPage />;
     case '/stats':
@@ -32,7 +36,7 @@ export function App() {
       <header className="topbar">
         <a href="#/" className="brand">
           <span className="brand-ball">7</span>
-          오늘의 번호
+          로또 찐번호
         </a>
       </header>
 

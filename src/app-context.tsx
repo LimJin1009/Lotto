@@ -10,7 +10,8 @@ interface AppState {
   round: number;
   now: Date;
   saved: SavedSet[];
-  save: (r: GenResult) => void;
+  /** 번호함에 저장. drawNo를 안 주면 이번 회차 */
+  save: (r: GenResult, drawNo?: number) => void;
   remove: (id: string) => void;
   toast: (msg: string) => void;
   toastMsg: string | null;
@@ -55,9 +56,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const round = currentRound(latest, now);
 
   const save = useCallback(
-    (r: GenResult) => {
-      setSaved(addSaved(r, round));
-      setToastMsg(`${round}회 번호함에 저장했어요`);
+    (r: GenResult, drawNo = round) => {
+      setSaved(addSaved(r, drawNo));
+      setToastMsg(`${drawNo}회 번호함에 저장했어요`);
     },
     [round],
   );
