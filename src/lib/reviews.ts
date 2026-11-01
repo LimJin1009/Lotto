@@ -1,7 +1,7 @@
-// 당첨 인증 후기: Supabase REST 로 읽고 쓴다 (라이브러리 없이 fetch)
-import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config';
+// 당첨 인증 후기: 맥미니 후기 서버(server/reviews-server.mjs)에 읽고 쓴다
+import { REVIEWS_API } from './config';
 
-export const reviewsEnabled = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
+export const reviewsEnabled = Boolean(REVIEWS_API);
 
 export interface Review {
   id: string;
@@ -18,43 +18,30 @@ export interface Review {
 
 export type RankFilter = 'all' | 'top' | 4 | 5;
 
-const headers = () => ({
-  apikey: SUPABASE_ANON_KEY,
-  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-  'Content-Type': 'application/json',
-});
-
 async function call<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${SUPABASE_URL.replace(/\/$/, '')}${path}`, { ...init, headers: { ...headers(), ...init?.headers } });
+  let res: Response;
+  try {
+    res = await fetch(`${REVIEWS_API.replace(/\/$/, '')}${path}`, { ...init, headers: { 'Content-Type': 'application/json', ...init?.headers } });
+  } catch {
+    throw new Error('후기 서버에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.');
+  }
   const body = await res.json().catch(() => null);
-  if (!res.ok) throw new Error((body as { message?: string } | null)?.message ?? '서버에 연결하지 못했어요. 잠시 뒤 다시 해 주세요.');
+  if (!res.ok) throw new Error((body as { message?: string } | null)?.message ?? '후기 서버에 문제가 생겼어요. 잠시 뒤 다시 해 주세요.');
   return body as T;
 }
 
 export const PAGE_SIZE = 20;
 
 export function listReviews(filter: RankFilter, offset: number): Promise<Review[]> {
-  const q = new URLSearchParams({
-    select: 'id,created_at,round,rank,game_label,game_type,numbers,nickname,content,method',
-    order: 'created_at.desc',
-    limit: String(PAGE_SIZE),
-    offset: String(offset),
-  });
-  if (filter === 'top') q.set('rank', 'lte.3');
-  else if (filter !== 'all') q.set('rank', `eq.${filter}`);
-  return call<Review[]>(`/rest/v1/reviews?${q}`);
+  return call<Review[]>(`/api/reviews?rank=${filter}&offset=${offset}`);
 }
 
 export async function reviewStats(): Promise<Record<number, number>> {
-  const rows = await call<{ rank: number; count: number }[]>('/rest/v1/rpc/review_stats', { method: 'POST', body: '{}' });
-  return Object.fromEntries(rows.map((r) => [r.rank, Number(r.count)]));
+  return call<Record<number, number>>('/api/stats');
 }
 
 export function submitReview(input: { qr: string; game: string; nickname: string; content: string; method?: string | null }): Promise<Review> {
-  return call<Review>('/rest/v1/rpc/submit_review', {
-    method: 'POST',
-    body: JSON.stringify({ p_qr: input.qr, p_game: input.game, p_nickname: input.nickname, p_content: input.content, p_method: input.method ?? null }),
-  });
+  return call<Review>('/api/reviews', { method: 'POST', body: JSON.stringify(input) });
 }
 
 const NICK_KEY = 'lotto.nickname.v1';

@@ -1,6 +1,6 @@
 # GitHub Pages 배포
 # - main에 올리면 배포
-# - 매주 토요일 21:30·일요일 10:00(한국 시간)에 최신 당첨번호를 받아 다시 배포 (후기 서버에도 올림)
+# - 매주 토요일 21:30·일요일 10:00(한국 시간)에 최신 당첨번호를 받아 다시 배포
 name: 배포
 
 on:
@@ -32,10 +32,6 @@ jobs:
       - run: npm ci
       - name: 최신 당첨번호 받기
         run: npm run update-draws
-      - name: 당첨번호를 후기 서버에 올리기 (설정이 없으면 건너뜀)
-        run: node scripts/sync-draws-supabase.mjs
-        env:
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
