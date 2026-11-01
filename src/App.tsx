@@ -1,5 +1,6 @@
 import { useApp } from './app-context';
 import { useRoute } from './router';
+import { InstallButton } from './components/InstallSheet';
 import { CheckPage } from './pages/CheckPage';
 import { HomePage } from './pages/HomePage';
 import { SavedPage } from './pages/SavedPage';
@@ -35,9 +36,10 @@ export function App() {
     <div className="app">
       <header className="topbar">
         <a href="#/" className="brand">
-          <span className="brand-ball">7</span>
+          <img src="./icon-192.png" alt="" className="brand-icon" />
           로또 찐번호
         </a>
+        <InstallButton />
       </header>
 
       <main className="main">{page(route)}</main>

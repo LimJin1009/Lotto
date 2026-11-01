@@ -8,7 +8,8 @@
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "update-draws": "node scripts/update-draws.mjs"
+    "update-draws": "node scripts/update-draws.mjs",
+    "icons": "node scripts/make-icons.mjs"
   },
   "dependencies": {
     "jsqr": "^1.4.0",
@@ -21,6 +22,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "qrcode": "^1.5.4",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"

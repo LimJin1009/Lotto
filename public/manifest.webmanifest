@@ -1,0 +1,19 @@
+{
+  "name": "로또 찐번호",
+  "short_name": "찐번호",
+  "description": "꿈 해몽, 생일·차량번호, 역대 통계로 뽑는 로또 번호와 QR 당첨 확인",
+  "lang": "ko",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141b2e",
+  "theme_color": "#1f2a44",
+  "categories": ["entertainment", "lifestyle"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
