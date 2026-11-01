@@ -1434,3 +1434,28 @@ h2 small {
   font-size: 22px;
   margin-bottom: 10px;
 }
+
+.scanner-tools {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.scanner-tip {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.qr-raw {
+  display: block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--ink-2);
+  word-break: break-all;
+}

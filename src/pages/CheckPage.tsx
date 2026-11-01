@@ -135,7 +135,7 @@ function PhotoPicker({ onText }: { onText: (t: string) => boolean }) {
     try {
       const text = await decodeFile(file);
       if (!text) setError('사진에서 QR 코드를 찾지 못했어요. QR이 크고 선명하게 나오게 다시 찍어 주세요.');
-      else if (!onText(text)) setError('로또 복권 QR이 아니에요. 복권 오른쪽 위의 QR을 찍어 주세요.');
+      else if (!onText(text)) setError(`로또 복권 QR이 아니에요. 복권 오른쪽 위의 QR을 찍어 주세요. (읽은 내용: ${text.slice(0, 120)})`);
     } catch {
       setError('사진을 열지 못했어요. 다른 사진으로 해 주세요.');
     } finally {
@@ -212,16 +212,16 @@ function ManualInput({ onCheck }: { onCheck: (t: Ticket) => void }) {
 export function CheckPage() {
   const [tab, setTab] = useState<Tab>('camera');
   const [ticket, setTicket] = useState<Ticket | null>(null);
-  const [notLotto, setNotLotto] = useState(false);
+  const [notLotto, setNotLotto] = useState<string | null>(null);
   const top = useRef<HTMLDivElement>(null);
 
   const onQr = (text: string): boolean => {
     const t = parseLottoQr(text);
     if (!t) {
-      setNotLotto(true);
+      setNotLotto(text);
       return false;
     }
-    setNotLotto(false);
+    setNotLotto(null);
     setTicket(t);
     navigator.vibrate?.(60);
     return true;
@@ -250,7 +250,12 @@ export function CheckPage() {
             ))}
           </div>
           {tab === 'camera' && <QrScanner onText={onQr} onFallback={() => setTab('photo')} />}
-          {tab === 'camera' && notLotto && <p className="form-error">로또 복권 QR이 아니에요. 복권 오른쪽 위의 QR을 비춰 주세요.</p>}
+          {tab === 'camera' && notLotto && (
+            <p className="form-error">
+              로또 복권 QR이 아니에요. 복권 오른쪽 위의 QR을 비춰 주세요.
+              <span className="qr-raw">읽은 내용: {notLotto.slice(0, 120)}</span>
+            </p>
+          )}
           {tab === 'photo' && <PhotoPicker onText={onQr} />}
           {tab === 'manual' && <ManualInput onCheck={setTicket} />}
         </section>

@@ -18,6 +18,20 @@ function nativeDetector(): DetectorLike | null {
   return detector;
 }
 
+/** 휴대폰 기본 QR 인식으로 영상·이미지를 통째로 읽기. 기능이 없으면 null */
+export async function detectNative(source: CanvasImageSource): Promise<string | null> {
+  const det = nativeDetector();
+  if (!det) return null;
+  try {
+    const found = await det.detect(source);
+    return found[0]?.rawValue ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export const hasNativeDetector = () => nativeDetector() !== null;
+
 /** 픽셀 데이터에서 QR 읽기 (jsQR) */
 export async function decodeImageData(data: Uint8ClampedArray, width: number, height: number, thorough = false): Promise<string | null> {
   const { default: jsQR } = await import('jsqr');
