@@ -95,7 +95,7 @@ function LatestDraw({ latest }: { latest: Draw }) {
 
 export function HomePage() {
   const { draws, latest } = useApp();
-  const [mode, setMode] = useState<Mode>('random');
+  const [mode, setMode] = useState<Mode>('dream');
   const [dream, setDream] = useState<DreamChoice>({ dream: null, sit: null });
   const [personal, setPersonal] = useState<PersonalInput[]>([{ kind: 'birthday', value: '' }]);
   const [strategy, setStrategy] = useState<StatsStrategy>('hot');
