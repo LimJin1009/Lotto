@@ -144,7 +144,7 @@ export async function listReviews(db, rank = 'all', offset = 0) {
   const where = rank === 'top' ? 'AND rank <= 3' : ['4', '5'].includes(String(rank)) ? `AND rank = ${Number(rank)}` : '';
   const off = Math.max(0, Math.min(Number(offset) || 0, 100000));
   const { results } = await db
-    .prepare(`SELECT * FROM reviews WHERE hidden = 0 ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .prepare(`SELECT * FROM reviews WHERE hidden = 0 ${where} ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?`)
     .bind(PAGE_SIZE, off)
     .all();
   return results.map(toReview);

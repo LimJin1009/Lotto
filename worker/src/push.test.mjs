@@ -92,7 +92,7 @@ describe('당첨 알림', () => {
 
   it('추첨이 끝나면 당첨된 기기에만 알림, 문구는 inbox 로 가져감', async () => {
     pushStatus = (url) => (url.endsWith('device-2') ? 201 : 201);
-    const r = await runPushRound(env, { fetchImpl: fakeFetch, now: new Date('2026-10-31T13:00:00Z') });
+    const r = await runPushRound(env, { fetchImpl: fakeFetch });
     expect(r.prepared).toEqual([{ round: 1248, winners: 2, checked: 4 }]);
     expect(r.sent).toBe(2);
     expect(pushed.map((p) => p.url).sort()).toEqual([FCM(1), FCM(2)]);
