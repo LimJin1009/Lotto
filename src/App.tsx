@@ -1,6 +1,7 @@
 import { useApp } from './app-context';
 import { useRoute } from './router';
 import { InstallButton } from './components/InstallSheet';
+import { ShareAppButton } from './components/ShareAppButton';
 import { buildLabel, useUpdateAvailable } from './lib/version';
 import { CheckPage } from './pages/CheckPage';
 import { HomePage } from './pages/HomePage';
@@ -45,7 +46,10 @@ export function App() {
           <img src="./icon-192.png" alt="" className="brand-icon" />
           로또 찐번호
         </a>
-        <InstallButton />
+        <div className="topbar-actions">
+          <InstallButton />
+          <ShareAppButton />
+        </div>
       </header>
 
       {update && (

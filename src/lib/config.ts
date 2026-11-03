@@ -5,3 +5,6 @@ export const REVIEWS_API = 'https://lotto-reviews.lottojjin.workers.dev';
 
 // 당첨 알림 서명 공개키 (서버 worker/wrangler.toml 의 VAPID_PUBLIC 과 같아야 함)
 export const VAPID_PUBLIC_KEY = 'BGWjqDTlWkuJON7Z5tzuK_xvKc8w-vcXlWC9hq9TZsLpFGhguqIOCNDPQyrPpdXsvvpGwA6dIyHfRCZnNXwYd9I';
+
+// 친구에게 알려주기로 보내는 앱 주소
+export const SITE_URL = 'https://limjin1009.github.io/Lotto/';

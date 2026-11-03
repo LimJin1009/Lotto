@@ -107,6 +107,7 @@ h2 small {
   font-weight: 800;
   font-size: 18px;
   letter-spacing: -0.03em;
+  white-space: nowrap;
 }
 
 .brand-icon {
@@ -114,6 +115,17 @@ h2 small {
   height: 30px;
   border-radius: 9px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.share-app-btn {
+  border-color: var(--primary);
+  color: var(--primary);
 }
 
 .install-btn {
@@ -124,6 +136,30 @@ h2 small {
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
+}
+
+/* 아주 좁은 휴대폰: 상단 버튼 두 개가 한 줄에 들어가게 */
+@media (max-width: 359px) {
+  .topbar {
+    gap: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .brand {
+    font-size: 16px;
+    gap: 6px;
+  }
+  .brand-icon {
+    width: 26px;
+    height: 26px;
+  }
+  .topbar-actions {
+    gap: 4px;
+  }
+  .install-btn {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
 }
 
 /* 설치 안내 창 */
