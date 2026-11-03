@@ -1,0 +1,12 @@
+# 로또 찐번호 후기 서버 (Cloudflare Workers + D1)
+# 올리는 법·관리: docs/후기서버.md
+name = "lotto-reviews"
+main = "src/index.mjs"
+compatibility_date = "2025-09-01"
+workers_dev = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "lotto-reviews"
+# 누나 Cloudflare 계정에서 "wrangler d1 create lotto-reviews" 로 만든 뒤 나오는 id 를 넣는다
+database_id = "00000000-0000-0000-0000-000000000000"
