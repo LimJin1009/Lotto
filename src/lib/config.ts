@@ -8,3 +8,6 @@ export const VAPID_PUBLIC_KEY = 'BGWjqDTlWkuJON7Z5tzuK_xvKc8w-vcXlWC9hq9TZsLpFGh
 
 // 친구에게 알려주기로 보내는 앱 주소
 export const SITE_URL = 'https://limjin1009.github.io/Lotto/';
+
+// 개발자 응원하기: 카카오페이 송금 코드 (계좌번호는 화면에 직접 쓰지 않음)
+export const SUPPORT_KAKAOPAY_URL = 'https://qr.kakaopay.com/Ej8vK6HbG';

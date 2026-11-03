@@ -1722,6 +1722,38 @@ h2 small {
   font-size: 14px;
 }
 
+.support-link {
+  margin: 6px 0 2px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.support-icon {
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  background: var(--bg);
+}
+
+.sheet-actions .btn-kakaopay {
+  flex: 2;
+}
+
+.btn-kakaopay {
+  white-space: nowrap;
+  background: #fee500;
+  color: #191919;
+  border-color: #fee500;
+  text-align: center;
+  text-decoration: none;
+}
+
 .version {
   opacity: 0.6;
   font-variant-numeric: tabular-nums;

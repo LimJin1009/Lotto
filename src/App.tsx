@@ -2,6 +2,7 @@ import { useApp } from './app-context';
 import { useRoute } from './router';
 import { InstallButton } from './components/InstallSheet';
 import { ShareAppButton } from './components/ShareAppButton';
+import { SupportButton } from './components/SupportButton';
 import { buildLabel, useUpdateAvailable } from './lib/version';
 import { CheckPage } from './pages/CheckPage';
 import { HomePage } from './pages/HomePage';
@@ -67,6 +68,8 @@ export function App() {
         재미로 보는 번호예요. 어떤 방법으로 만들어도 모든 번호 조합의 당첨 확률은 같습니다 (1등 8,145,060분의 1).
         <br />
         당첨번호 출처: 동행복권 결과를 모은 공개 데이터 · 정확한 결과는 동행복권(dhlottery.co.kr)에서 확인하세요.
+        <br />
+        <SupportButton />
         <br />
         <span className="version">버전 {buildLabel()}</span>
       </footer>
