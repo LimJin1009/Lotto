@@ -1025,11 +1025,12 @@ h2 small {
   }
 }
 
-/* 게임 수 고르기: 복권 용지처럼 칸에 체크 */
+/* 게임 수 고르기: 방식 카드 안, 복권 용지처럼 칸에 체크 */
 .game-pick {
   border: 0;
   margin: 0;
-  padding: 0;
+  padding: 14px 0 0;
+  border-top: 1px dashed var(--line);
   min-width: 0;
   width: 100%;
   display: grid;
@@ -1038,11 +1039,14 @@ h2 small {
 }
 
 .game-pick legend {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  float: left;
+  grid-column: 1 / -1;
+  width: 100%;
+  margin: 0 0 10px;
   padding: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
 }
 
 .game-box {
@@ -1050,12 +1054,13 @@ h2 small {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 8px 0 7px;
-  border-radius: 10px;
-  border: 1.5px solid rgba(255, 255, 255, 0.22);
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 12px;
+  gap: 5px;
+  padding: 10px 0 9px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
   user-select: none;
@@ -1068,30 +1073,31 @@ h2 small {
 }
 
 .game-box > span {
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 2px solid var(--ink-2);
   display: grid;
   place-items: center;
-  font-size: 13px;
+  font-size: 15px;
+  font-weight: 900;
   line-height: 1;
 }
 
 .game-on {
-  border-color: var(--gold);
-  color: #fff;
-  background: rgba(245, 184, 0, 0.12);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
 }
 
 .game-on > span {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: var(--navy);
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
 }
 
 .game-box:has(input:focus-visible) {
-  outline: 2px solid var(--gold);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 

@@ -41,7 +41,7 @@ function loadGames(): number {
 function GamePicker({ value, onChange, disabled }: { value: number; onChange: (n: number) => void; disabled: boolean }) {
   return (
     <fieldset className="game-pick" disabled={disabled}>
-      <legend>몇 게임?</legend>
+      <legend>몇 게임 뽑을까요?</legend>
       {Array.from({ length: MAX_GAMES }, (_, i) => {
         const n = i + 1;
         return (
@@ -272,6 +272,7 @@ export function HomePage() {
         {mode === 'personal' && <PersonalOptions value={personal} onChange={setPersonal} />}
         {mode === 'wish' && <WishOptions value={wish} onChange={setWish} />}
         {mode === 'stats' && <StatsOptions value={strategy} onChange={setStrategy} lastNo={latest.no} />}
+        <GamePicker value={games} onChange={setGames} disabled={running} />
       </section>
 
       <section className="machine" ref={machineBox}>
@@ -288,7 +289,6 @@ export function HomePage() {
             </span>
           ))}
         </div>
-        <GamePicker value={games} onChange={setGames} disabled={running} />
         {running ? (
           <button type="button" className="btn btn-ghost" onClick={instant}>
             바로 뽑기 ⚡
