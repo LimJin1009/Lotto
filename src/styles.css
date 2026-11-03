@@ -914,6 +914,81 @@ h2 small {
   }
 }
 
+/* 게임 수 고르기: 복권 용지처럼 칸에 체크 */
+.game-pick {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.game-pick legend {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+.game-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0 7px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+}
+
+.game-box input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.game-box > span {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.game-on {
+  border-color: var(--gold);
+  color: #fff;
+  background: rgba(245, 184, 0, 0.12);
+}
+
+.game-on > span {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+}
+
+.game-box:has(input:focus-visible) {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.game-pick:disabled .game-box {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* ── 번호함 ── */
 .empty {
   align-items: center;

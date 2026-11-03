@@ -164,6 +164,15 @@ describe('이름·소원 번호', () => {
     expect(r.reasons[charNumber('집')]).toBe("'집' 글자에서 나온 숫자");
   });
 
+  it('여러 게임: 게임마다 번호가 다르고, 같은 순서면 같은 번호', () => {
+    const text = '우리 가족 모두 건강하고 행복하게';
+    const sets = [0, 1, 2, 3, 4].map((g) => wishNumbers(text, g));
+    sets.forEach(expectValidSet);
+    expect(new Set(sets.map((s) => s.numbers.join(','))).size).toBeGreaterThan(1);
+    expect(wishNumbers(text, 2).numbers).toEqual(sets[2].numbers);
+    expect(wishNumbers(text, 0).numbers).toEqual(wishNumbers(text).numbers);
+  });
+
   it('긴 문장도 6개만', () => {
     expectValidSet(wishNumbers('우리 가족 모두 건강하고 행복하게 해 주세요'));
   });

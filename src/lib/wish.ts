@@ -25,13 +25,25 @@ function seeded(text: string): () => number {
   };
 }
 
-export function wishNumbers(text: string): GenResult {
+/**
+ * game: 몇 번째 게임인지 (0부터). 0번째는 글자 순서대로, 그 뒤 게임은
+ * 문장+게임 순서로 글자를 섞어 3개만 쓰고 나머지를 채운다. 같은 문장·같은 순서면 언제나 같은 번호.
+ */
+export function wishNumbers(text: string, game = 0): GenResult {
   const clean = normalizeWish(text);
-  const picks: { n: number; reason: string }[] = [];
+  let picks: { n: number; reason: string }[] = [];
   for (const ch of clean) picks.push({ n: charNumber(ch), reason: `'${ch}' 글자에서 나온 숫자` });
 
   // 글자가 모자라거나 겹치면, 문장으로 정해지는 난수로 채움 (그래도 같은 문장이면 같은 번호)
-  const rand = seeded(clean);
+  const rand = seeded(game > 0 ? `${clean}#${game}` : clean);
+  if (game > 0) {
+    const uniq = picks.filter((p, i) => picks.findIndex((q) => q.n === p.n) === i);
+    for (let i = uniq.length - 1; i > 0; i--) {
+      const j = Math.floor(rand() * (i + 1));
+      [uniq[i], uniq[j]] = [uniq[j], uniq[i]];
+    }
+    picks = uniq.slice(0, 3);
+  }
   const fill = (count: number, exclude: number[]) => {
     const pool = Array.from({ length: 45 }, (_, i) => i + 1).filter((n) => !exclude.includes(n));
     const out: number[] = [];

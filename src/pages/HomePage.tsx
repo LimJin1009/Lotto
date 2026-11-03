@@ -18,12 +18,48 @@ import type { Draw, GenResult } from '../lib/types';
 type Mode = 'random' | 'dream' | 'personal' | 'wish' | 'stats';
 
 const MODES: { id: Mode; emoji: string; label: string }[] = [
+  { id: 'random', emoji: '🎱', label: '자동 추첨' },
   { id: 'dream', emoji: '🌙', label: '꿈 해몽' },
   { id: 'personal', emoji: '🎂', label: '나만의 숫자' },
   { id: 'wish', emoji: '✍️', label: '이름·소원' },
   { id: 'stats', emoji: '📈', label: '통계' },
-  { id: 'random', emoji: '🎱', label: '자동 추첨' },
 ];
+
+/** 한 번에 뽑는 게임 수 (복권 한 장 = 5게임) */
+const MAX_GAMES = 5;
+const GAMES_KEY = 'lotto.games';
+
+function loadGames(): number {
+  try {
+    const n = Number(localStorage.getItem(GAMES_KEY));
+    return n >= 1 && n <= MAX_GAMES ? n : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function GamePicker({ value, onChange, disabled }: { value: number; onChange: (n: number) => void; disabled: boolean }) {
+  return (
+    <fieldset className="game-pick" disabled={disabled}>
+      <legend>몇 게임?</legend>
+      {Array.from({ length: MAX_GAMES }, (_, i) => {
+        const n = i + 1;
+        return (
+          <label key={n} className={`game-box${n <= value ? ' game-on' : ''}`}>
+            <input
+              type="checkbox"
+              checked={n <= value}
+              // 켜진 맨 끝 칸을 다시 누르면 한 칸 줄인다
+              onChange={() => onChange(n === value && n > 1 ? n - 1 : n)}
+            />
+            <span aria-hidden>{n <= value ? '✓' : ''}</span>
+            {n}게임
+          </label>
+        );
+      })}
+    </fieldset>
+  );
+}
 
 const SOON = ['🔮 오늘의 운세', '💞 궁합 번호', '🎬 추첨 영상 저장'];
 
@@ -98,12 +134,21 @@ function LatestDraw({ latest }: { latest: Draw }) {
 
 export function HomePage() {
   const { draws, latest } = useApp();
-  const [mode, setMode] = useState<Mode>('dream');
-  // 꿈 페이지의 "추첨기로 뽑기"에서 오면 (#/?dream=pig) 그 꿈이 골라진 채로 시작
+  // 꿈 페이지의 "추첨기로 뽑기"에서 오면 (#/?dream=pig) 꿈 해몽에 그 꿈이 골라진 채로 시작
   const [dream, setDream] = useState<DreamChoice>(() => {
     const id = new URLSearchParams(location.hash.split('?')[1] ?? '').get('dream');
     return { dream: DREAMS.find((d) => d.id === id) ?? null, sit: null };
   });
+  const [mode, setMode] = useState<Mode>(() => (dream.dream ? 'dream' : 'random'));
+  const [games, setGamesState] = useState(loadGames);
+  const setGames = (n: number) => {
+    setGamesState(n);
+    try {
+      localStorage.setItem(GAMES_KEY, String(n));
+    } catch {
+      /* 저장 못 해도 이번엔 그대로 씀 */
+    }
+  };
   const [personal, setPersonal] = useState<PersonalInput[]>([{ kind: 'birthday', value: '' }]);
   const [strategy, setStrategy] = useState<StatsStrategy>('hot');
   const [wish, setWish] = useState('');
@@ -111,8 +156,10 @@ export function HomePage() {
   const api = useRef<MachineApi | null>(null);
   const machineBox = useRef<HTMLElement>(null);
   const run = useRef(0);
-  const fast = useRef(false);
+  // 이번 추첨에서 뽑을 게임들과, 결과 목록에 이미 넣은 개수
+  const batch = useRef<{ list: GenResult[]; done: number }>({ list: [], done: 0 });
   const [running, setRunning] = useState(false);
+  const [gameNo, setGameNo] = useState(0);
   const [current, setCurrent] = useState<GenResult | null>(null);
   const [drawn, setDrawn] = useState<number[]>([]);
   const [results, setResults] = useState<GenResult[]>([]);
@@ -132,10 +179,10 @@ export function HomePage() {
           ? '문장을 먼저 써 주세요'
           : null;
 
-  const build = (): GenResult => {
+  const build = (game: number): GenResult => {
     if (mode === 'dream' && dream.dream) return dreamNumbers(dream.dream, dream.sit ?? undefined);
     if (mode === 'personal') return personalNumbers(usablePersonal);
-    if (mode === 'wish') return wishNumbers(wish);
+    if (mode === 'wish') return wishNumbers(wish, game);
     if (mode === 'stats') return statsNumbers(draws, strategy);
     return randomResult();
   };
@@ -145,33 +192,55 @@ export function HomePage() {
     if (!m || notReady) return;
     const id = ++run.current;
     // 번호는 추첨 전에 이미 정해 둔다. 추첨기는 그 공을 꺼내는 모습을 보여줄 뿐이다.
-    const r = build();
-    fast.current = false;
-    m.reset();
-    m.setFast(false);
-    setCurrent(r);
-    setDrawn([]);
+    const list = Array.from({ length: games }, (_, g) => build(g));
+    batch.current = { list, done: 0 };
     setRunning(true);
     machineBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-    m.setMixing(true);
-    await wait(1900);
-    for (const n of shuffle(r.numbers)) {
-      if (run.current !== id) return;
-      if (!fast.current) await wait(500);
-      if (run.current !== id) return;
-      await m.extract(n);
-      if (run.current !== id) return;
-      setDrawn((d) => [...d, n]);
+    for (let g = 0; g < list.length; g++) {
+      const r = list[g];
+      m.reset();
+      m.setFast(false);
+      setGameNo(g + 1);
+      setCurrent(r);
+      setDrawn([]);
+      m.setMixing(true);
+      await wait(g === 0 ? 1900 : 1100);
+      for (const n of shuffle(r.numbers)) {
+        if (run.current !== id) return;
+        await wait(500);
+        if (run.current !== id) return;
+        await m.extract(n);
+        if (run.current !== id) return;
+        setDrawn((d) => [...d, n]);
+      }
+      m.setMixing(false);
+      setResults((l) => pushResult(l, r));
+      batch.current.done = g + 1;
+      if (g < list.length - 1) {
+        await wait(900);
+        if (run.current !== id) return;
+      }
     }
-    m.setMixing(false);
-    setResults((l) => pushResult(l, r));
     setRunning(false);
   };
 
-  const skip = () => {
-    fast.current = true;
-    api.current?.setFast(true);
+  // 바로 뽑기: 남은 공과 남은 게임을 기다리지 않고 한 번에 보여 준다
+  const instant = () => {
+    const { list, done } = batch.current;
+    run.current++;
+    const rest = list.slice(done);
+    setResults((l) => rest.reduce(pushResult, l));
+    batch.current.done = list.length;
+    const last = list[list.length - 1];
+    if (last) {
+      setCurrent(last);
+      setGameNo(list.length);
+      setDrawn(last.numbers);
+    }
+    api.current?.reset();
+    api.current?.setMixing(false);
+    setRunning(false);
   };
 
   return (
@@ -206,7 +275,11 @@ export function HomePage() {
       </section>
 
       <section className="machine" ref={machineBox}>
-        <div className="machine-title">{running && current ? `${current.emoji} ${current.title}` : '로또 찐번호 추첨기'}</div>
+        <div className="machine-title">
+          {running && current
+            ? `${current.emoji} ${current.title}${batch.current.list.length > 1 ? ` · ${gameNo}/${batch.current.list.length}게임` : ''}`
+            : '로또 찐번호 추첨기'}
+        </div>
         <DrawMachine apiRef={api} />
         <div className="tray" aria-live="polite">
           {Array.from({ length: 6 }, (_, i) => (
@@ -215,13 +288,14 @@ export function HomePage() {
             </span>
           ))}
         </div>
+        <GamePicker value={games} onChange={setGames} disabled={running} />
         {running ? (
-          <button type="button" className="btn btn-ghost" onClick={skip}>
-            빨리 감기 ⏩
+          <button type="button" className="btn btn-ghost" onClick={instant}>
+            바로 뽑기 ⚡
           </button>
         ) : (
           <button type="button" className="btn btn-gold btn-big" onClick={start} disabled={!!notReady}>
-            {notReady ?? (results.length ? '한 게임 더 추첨' : '추첨 시작')}
+            {notReady ?? `${games}게임 ${results.length ? '더 ' : ''}추첨${results.length ? '' : ' 시작'}`}
           </button>
         )}
       </section>
