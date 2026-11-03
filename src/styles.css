@@ -785,6 +785,117 @@ h2 small {
   gap: 8px;
 }
 
+/* 여러 게임: 복권 용지 한 장 */
+.slip {
+  gap: 10px;
+}
+
+.slip-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.slip-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  column-gap: 6px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.slip-row:last-child {
+  border-bottom: 0;
+}
+
+.slip-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.slip-letter {
+  flex: none;
+  width: 22px;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.slip-balls {
+  display: flex;
+  gap: 5px;
+}
+
+.slip-balls .ball {
+  --size: 32px;
+}
+
+.slip-save {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.slip-saved {
+  border-color: var(--win);
+  color: var(--win);
+  cursor: default;
+}
+
+.slip-open .slip-main {
+  padding-bottom: 6px;
+}
+
+.slip-detail {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+
+.slip-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.slip-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--ink-2);
+}
+
+@media (max-width: 380px) {
+  .slip-balls {
+    gap: 3px;
+  }
+  .slip-balls .ball {
+    --size: 29px;
+  }
+  .slip-main {
+    gap: 6px;
+  }
+}
+
 /* ── 홈: 카운트다운·방식 선택 ── */
 .countdown {
   display: flex;
