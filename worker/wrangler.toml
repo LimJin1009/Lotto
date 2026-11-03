@@ -8,5 +8,5 @@ workers_dev = true
 [[d1_databases]]
 binding = "DB"
 database_name = "lotto-reviews"
-# 누나 Cloudflare 계정에서 "wrangler d1 create lotto-reviews" 로 만든 뒤 나오는 id 를 넣는다
-database_id = "00000000-0000-0000-0000-000000000000"
+# 누나 Cloudflare 계정(dlawls3355)의 D1 lotto-reviews
+database_id = "7244cf7d-e9dc-40fa-946c-0bed75e5441a"
