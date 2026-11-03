@@ -54,3 +54,51 @@ self.addEventListener('fetch', (e) => {
     ),
   );
 });
+
+// ── 당첨 알림 ──
+// 서버는 내용 없는 알림만 보낸다. 받으면 서버에 문구를 물어보고 보여 준다.
+const API = 'https://lotto-reviews.lottojjin.workers.dev';
+
+self.addEventListener('push', (e) => {
+  e.waitUntil(
+    (async () => {
+      let msg = { title: '🎉 로또 찐번호', body: '저장한 번호의 추첨 결과가 나왔어요. 눌러서 확인해 보세요.', url: '#/saved' };
+      try {
+        const sub = await self.registration.pushManager.getSubscription();
+        if (sub) {
+          const res = await fetch(`${API}/api/push/inbox`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ endpoint: sub.endpoint }),
+          });
+          if (res.ok) msg = { ...msg, ...(await res.json()) };
+        }
+      } catch {
+        /* 문구를 못 가져오면 기본 문구로 */
+      }
+      await self.registration.showNotification(msg.title, {
+        body: msg.body,
+        icon: './icon-192.png',
+        badge: './icon-192.png',
+        tag: 'lotto-win',
+        data: { url: msg.url },
+      });
+    })(),
+  );
+});
+
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const target = new URL(`./${e.notification.data?.url ?? '#/saved'}`, self.registration.scope).href;
+  e.waitUntil(
+    (async () => {
+      const wins = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const mine = wins.find((w) => w.url.startsWith(self.registration.scope));
+      if (mine) {
+        await mine.focus();
+        return mine.navigate(target).catch(() => {});
+      }
+      return self.clients.openWindow(target);
+    })(),
+  );
+});

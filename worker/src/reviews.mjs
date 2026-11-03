@@ -15,7 +15,6 @@
 
 export const PAGE_SIZE = 20;
 const DRAW_SOURCE = 'https://smok95.github.io/lotto/results';
-const DEFAULT_ORIGINS = ['https://limjin1009.github.io', 'http://localhost:5179', 'http://localhost:5180', 'http://localhost:4173'];
 const BODY_LIMIT = 8 * 1024;
 const LIMITS = { perIp: 5, ipWindowMs: 10 * 60_000, global: 300, globalWindowMs: 60 * 60_000 };
 
@@ -48,12 +47,12 @@ export function rankOf(nums, draw) {
   return 0;
 }
 
-async function sha256(text) {
+export async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-class UserError extends Error {
+export class UserError extends Error {
   constructor(message, status = 400) {
     super(message);
     this.status = status;
@@ -159,67 +158,25 @@ export async function reviewStats(db) {
 }
 
 /** 도배 막기. 통과하면 기록하고 true */
-export async function allowHit(db, ip, now = Date.now(), limits = LIMITS) {
+export async function allowHit(db, ip, now = Date.now(), limits = LIMITS, table = 'hits') {
+  if (table !== 'hits' && table !== 'sync_hits') throw new Error('잘못된 표 이름');
   const key = await sha256(`lotto:${ip}`);
-  await db.prepare('DELETE FROM hits WHERE ts < ?').bind(now - Math.max(limits.ipWindowMs, limits.globalWindowMs)).run();
+  await db.prepare(`DELETE FROM ${table} WHERE ts < ?`).bind(now - Math.max(limits.ipWindowMs, limits.globalWindowMs)).run();
   const row = await db
-    .prepare('SELECT (SELECT COUNT(*) FROM hits WHERE ip = ? AND ts > ?) AS mine, (SELECT COUNT(*) FROM hits WHERE ts > ?) AS total')
+    .prepare(`SELECT (SELECT COUNT(*) FROM ${table} WHERE ip = ? AND ts > ?) AS mine, (SELECT COUNT(*) FROM ${table} WHERE ts > ?) AS total`)
     .bind(key, now - limits.ipWindowMs, now - limits.globalWindowMs)
     .first();
   if (row.mine >= limits.perIp || row.total >= limits.global) return false;
-  await db.prepare('INSERT INTO hits (ip, ts) VALUES (?, ?)').bind(key, now).run();
+  await db.prepare(`INSERT INTO ${table} (ip, ts) VALUES (?, ?)`).bind(key, now).run();
   return true;
 }
 
-async function readJson(request) {
+export async function readJson(request) {
   const text = await request.text();
   if (new TextEncoder().encode(text).length > BODY_LIMIT) throw new UserError('보낸 내용이 너무 커요', 413);
   try {
     return JSON.parse(text || '{}');
   } catch {
     throw new UserError('보낸 내용을 읽지 못했어요');
-  }
-}
-
-// ── HTTP ──
-export async function handle(request, env, { fetchImpl = fetch } = {}) {
-  const db = env.DB;
-  const allow = env.ALLOW_ORIGINS ? env.ALLOW_ORIGINS.split(',') : DEFAULT_ORIGINS;
-  const origin = request.headers.get('Origin');
-  const headers = {
-    'Content-Type': 'application/json; charset=utf-8',
-    'X-Content-Type-Options': 'nosniff',
-    'Cache-Control': 'no-store',
-    Vary: 'Origin',
-  };
-  if (origin && allow.includes(origin)) {
-    headers['Access-Control-Allow-Origin'] = origin;
-    headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS';
-    headers['Access-Control-Allow-Headers'] = 'Content-Type';
-    headers['Access-Control-Max-Age'] = '86400';
-  }
-  const send = (status, body) => new Response(body === undefined ? null : JSON.stringify(body), { status, headers });
-
-  try {
-    const url = new URL(request.url);
-    const { method } = request;
-    if (method === 'OPTIONS') return send(204);
-    if (method === 'GET' && url.pathname === '/health') return send(200, { ok: true });
-    if (method === 'GET' && url.pathname === '/api/reviews') {
-      return send(200, await listReviews(db, url.searchParams.get('rank') ?? 'all', url.searchParams.get('offset') ?? 0));
-    }
-    if (method === 'GET' && url.pathname === '/api/stats') return send(200, await reviewStats(db));
-    if (method === 'POST' && url.pathname === '/api/reviews') {
-      const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
-      if (!(await allowHit(db, ip))) return send(429, { message: '잠시 뒤에 다시 올려 주세요' });
-      const saved = await submitReview(db, await readJson(request), { fetchImpl });
-      console.log(`후기 저장 ${saved.round}회 ${saved.game_label} ${saved.rank}등`);
-      return send(201, saved);
-    }
-    return send(404, { message: '없는 주소예요' });
-  } catch (e) {
-    if (e instanceof UserError) return send(e.status, { message: e.message });
-    console.error(e);
-    return send(500, { message: '서버에 문제가 생겼어요. 잠시 뒤 다시 해 주세요' });
   }
 }

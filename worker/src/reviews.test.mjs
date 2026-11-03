@@ -1,26 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
-import { allowHit, handle, parseQr } from './reviews.mjs';
-
-// Cloudflare D1 과 같은 모양의 가짜 DB (내 PC 의 SQLite 로 흉내)
-class FakeD1 {
-  constructor() {
-    this.db = new DatabaseSync(':memory:');
-    this.db.exec(readFileSync(new URL('../schema.sql', import.meta.url), 'utf8'));
-  }
-  prepare(sql) {
-    const st = this.db.prepare(sql);
-    let args = [];
-    const q = {
-      bind: (...a) => ((args = a), q),
-      first: async () => st.get(...args) ?? null,
-      all: async () => ({ results: st.all(...args) }),
-      run: async () => (st.run(...args), { success: true }),
-    };
-    return q;
-  }
-}
+import { handle } from './app.mjs';
+import { allowHit, parseQr } from './reviews.mjs';
+import { FakeD1 } from './fake-d1.mjs';
 
 const QR5 = 'http://m.dhlottery.co.kr/?v=1248q161827363842m162736384245s010203040506q161827363822q182736384243n0000000000001234567890';
 const draw1248 = { draw_no: 1248, numbers: [16, 18, 27, 36, 38, 42], bonus_no: 22, date: '2026-10-31T00:00:00Z' };

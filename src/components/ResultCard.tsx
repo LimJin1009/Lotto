@@ -3,6 +3,7 @@ import { useApp } from '../app-context';
 import { METHOD_LABEL, type GenResult } from '../lib/types';
 import { isSameSet } from '../lib/saved';
 import { Ball, BallRow } from './Ball';
+import { PushCard } from './PushCard';
 
 export function shareText(r: GenResult): string {
   return `${r.emoji} ${r.title}\n${r.numbers.join('  ')}\n\n로또 찐번호에서 ${METHOD_LABEL[r.method]}(으)로 만든 번호예요 (재미로 보는 번호)\n${location.href.split('#')[0]}`;
@@ -173,6 +174,7 @@ export function ResultList({ results, onClear }: { results: GenResult[]; onClear
         </button>
       </div>
       {list.length === 1 ? <ResultCard result={list[0]} /> : <ResultSlip list={list} />}
+      <PushCard compact />
     </section>
   );
 }

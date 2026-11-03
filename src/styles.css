@@ -1824,3 +1824,68 @@ h2 small {
   align-items: center;
   gap: 8px;
 }
+
+/* ── 당첨 알림 ── */
+.push-card {
+  gap: 8px;
+}
+
+.push-card p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.push-card .btn {
+  margin-top: 4px;
+}
+
+.push-on {
+  border: 1.5px solid color-mix(in srgb, var(--win) 50%, transparent);
+}
+
+.push-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.push-card .push-note {
+  font-size: 12.5px;
+}
+
+.push-card .push-error {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.push-mini {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1.5px dashed var(--line);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.push-mini .link-btn {
+  flex: none;
+}
+
+.saved-review {
+  display: block;
+  margin-top: 2px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--gold) 18%, var(--surface));
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+}

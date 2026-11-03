@@ -1,5 +1,6 @@
 import { useApp } from '../app-context';
 import { BallRow } from '../components/Ball';
+import { PushCard } from '../components/PushCard';
 import { share } from '../components/ResultCard';
 import { drawTime, formatDate, rankOf } from '../lib/draws';
 import { METHOD_LABEL, type SavedSet } from '../lib/types';
@@ -25,6 +26,11 @@ function SavedItem({ s }: { s: SavedSet }) {
         )}
       </div>
       <BallRow nums={s.numbers} size="sm" hits={hits} />
+      {rank !== null && rank > 0 && (
+        <a href="#/check" className="saved-review">
+          이 번호로 복권을 샀다면, QR로 확인하고 당첨 후기 남기기 →
+        </a>
+      )}
       <div className="saved-foot">
         <span>
           {METHOD_LABEL[s.method]} · {new Date(s.createdAt).toLocaleDateString('ko-KR')} 저장
@@ -59,6 +65,8 @@ export function SavedPage() {
         <h1>🗂️ 내 번호함</h1>
         <p>저장한 번호는 추첨이 끝나면 자동으로 맞춰 봐요. 이 기기의 브라우저에만 저장돼요.</p>
       </div>
+
+      <PushCard />
 
       {saved.length === 0 && (
         <div className="card empty">

@@ -33,3 +33,46 @@ CREATE TABLE IF NOT EXISTS hits (
 
 CREATE INDEX IF NOT EXISTS hits_ip_ts ON hits (ip, ts);
 CREATE INDEX IF NOT EXISTS hits_ts ON hits (ts);
+
+-- ── 당첨 알림 (웹 푸시) ──
+-- 알림을 켠 기기. id = 받는 주소(endpoint)의 SHA-256
+CREATE TABLE IF NOT EXISTS subs (
+  id TEXT PRIMARY KEY,
+  endpoint TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+-- 추첨 전 회차에 저장해 둔 번호 (그 회차 알림을 보내고 나면 지움)
+CREATE TABLE IF NOT EXISTS watch (
+  sub_id TEXT NOT NULL,
+  round INTEGER NOT NULL,
+  nums TEXT NOT NULL,
+  PRIMARY KEY (sub_id, round, nums)
+);
+
+-- 보낼 알림 내용 (알림을 받은 휴대폰이 와서 가져감)
+CREATE TABLE IF NOT EXISTS inbox (
+  sub_id TEXT PRIMARY KEY,
+  round INTEGER NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  url TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  sent INTEGER NOT NULL DEFAULT 0,
+  tries INTEGER NOT NULL DEFAULT 0
+);
+
+-- 알림 준비를 끝낸 회차
+CREATE TABLE IF NOT EXISTS push_rounds (
+  round INTEGER PRIMARY KEY,
+  done_at TEXT NOT NULL
+);
+
+-- 알림 신청 도배 막기 (후기와 따로 셈)
+CREATE TABLE IF NOT EXISTS sync_hits (
+  ip TEXT NOT NULL,
+  ts INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sync_hits_ip_ts ON sync_hits (ip, ts);
+CREATE INDEX IF NOT EXISTS sync_hits_ts ON sync_hits (ts);

@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { currentRound, fetchNewDraws, localDraws } from './lib/draws';
+import { syncPush } from './lib/push';
 import { addSaved, loadSaved, removeSaved } from './lib/saved';
 import type { Draw, GenResult, SavedSet } from './lib/types';
 
@@ -54,6 +55,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const latest = draws.at(-1)!;
   const round = currentRound(latest, now);
+
+  // 당첨 알림을 켜 둔 기기면, 추첨 전 회차에 저장한 번호가 바뀔 때마다 서버에 다시 맡긴다
+  useEffect(() => {
+    const t = setTimeout(() => syncPush(saved, latest.no).catch(() => {}), 800);
+    return () => clearTimeout(t);
+  }, [saved, latest.no]);
 
   const save = useCallback(
     (r: GenResult, drawNo = round) => {
