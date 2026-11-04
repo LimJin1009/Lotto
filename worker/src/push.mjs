@@ -204,7 +204,7 @@ export async function handlePush(request, env, url, send) {
            ON CONFLICT(sub_id) DO UPDATE SET round = 0, title = excluded.title, body = excluded.body, url = excluded.url, created_at = excluded.created_at
            WHERE inbox.sent = 1`,
         )
-        .bind(s.id, '🔔 로또 찐번호 알림 시험', '알림이 잘 와요! 저장한 번호가 당첨되면 이렇게 알려 드려요.', '#/saved', at)
+        .bind(s.id, '🔔 로또 찐 번호 알림 시험', '알림이 잘 와요! 저장한 번호가 당첨되면 이렇게 알려 드려요.', '#/saved', at)
         .run();
       out.push(await sendPush(s.endpoint, env).catch(() => 0));
     }

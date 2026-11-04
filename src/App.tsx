@@ -45,7 +45,7 @@ export function App() {
       <header className="topbar">
         <a href="#/" className="brand">
           <img src="./icon-192.png" alt="" className="brand-icon" />
-          로또 찐번호
+          로또 찐 번호
         </a>
         <div className="topbar-actions">
           <InstallButton />

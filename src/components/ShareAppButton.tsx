@@ -1,7 +1,7 @@
 import { useApp } from '../app-context';
 import { SITE_URL } from '../lib/config';
 
-export const SHARE_APP_TEXT = '🎱 로또 찐번호: 꿈·소원·통계로 재미 삼아 로또 번호를 뽑아 보고, QR로 당첨도 확인해요. 무료예요!';
+export const SHARE_APP_TEXT = '🎱 로또 찐 번호: 꿈·소원·통계로 재미 삼아 로또 번호를 뽑아 보고, QR로 당첨도 확인해요. 무료예요!';
 
 /** 오른쪽 위 "친구에게 알려주기": 휴대폰 공유 창(카톡 등), 안 되면 주소 복사 */
 export function ShareAppButton() {
@@ -10,7 +10,7 @@ export function ShareAppButton() {
   const click = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: '로또 찐번호', text: SHARE_APP_TEXT, url: SITE_URL });
+        await navigator.share({ title: '로또 찐 번호', text: SHARE_APP_TEXT, url: SITE_URL });
         return;
       }
     } catch (e) {

@@ -279,7 +279,7 @@ export function HomePage() {
         <div className="machine-title">
           {running && current
             ? `${current.emoji} ${current.title}${batch.current.list.length > 1 ? ` · ${gameNo}/${batch.current.list.length}게임` : ''}`
-            : '로또 찐번호 추첨기'}
+            : '로또 찐 번호 추첨기'}
         </div>
         <DrawMachine apiRef={api} />
         <div className="tray" aria-live="polite">

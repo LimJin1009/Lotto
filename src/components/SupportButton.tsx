@@ -27,7 +27,7 @@ export function SupportButton() {
               </div>
               <h2 id="support-title">개발자 응원하기</h2>
               <p className="muted-text">
-                로또 찐번호는 광고 없이 무료로 운영돼요. 쓰면서 즐거우셨다면 커피 한 잔으로, 당첨되셨다면 크게 응원해 주세요^^ 응원하지 않아도 모든 기능은 똑같이 쓸 수 있어요.
+                로또 찐 번호는 광고 없이 무료로 운영돼요. 쓰면서 즐거우셨다면 커피 한 잔으로, 당첨되셨다면 크게 응원해 주세요^^ 응원하지 않아도 모든 기능은 똑같이 쓸 수 있어요.
               </p>
               <div className="sheet-actions">
                 <a className="btn btn-kakaopay" href={SUPPORT_KAKAOPAY_URL} target="_blank" rel="noopener noreferrer">

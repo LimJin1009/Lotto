@@ -1,4 +1,4 @@
-// 로또 찐번호 서비스 워커: 한 번 연 화면은 인터넷이 없어도 열리게 저장해 둔다.
+// 로또 찐 번호 서비스 워커: 한 번 연 화면은 인터넷이 없어도 열리게 저장해 둔다.
 // - 화면(HTML): 인터넷 먼저 (브라우저 저장본도 건너뛰고 사이트에 새 버전을 물어봄), 안 되면 저장본
 // - 같은 사이트의 파일(JS·CSS·아이콘): 저장본 먼저 (파일 이름에 버전이 붙어 있음)
 // - 다른 사이트(당첨번호 데이터, 글꼴): 건드리지 않음
@@ -62,7 +62,7 @@ const API = 'https://lotto-reviews.lottojjin.workers.dev';
 self.addEventListener('push', (e) => {
   e.waitUntil(
     (async () => {
-      let msg = { title: '🎉 로또 찐번호', body: '저장한 번호의 추첨 결과가 나왔어요. 눌러서 확인해 보세요.', url: '#/saved' };
+      let msg = { title: '🎉 로또 찐 번호', body: '저장한 번호의 추첨 결과가 나왔어요. 눌러서 확인해 보세요.', url: '#/saved' };
       try {
         const sub = await self.registration.pushManager.getSubscription();
         if (sub) {

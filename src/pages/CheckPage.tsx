@@ -147,7 +147,7 @@ function ReviewForm({ ticket, ranks }: { ticket: Ticket; ranks: number[] }) {
   const [error, setError] = useState('');
 
   const chosen = ticket.games.find((g) => g.label === game)!;
-  // 찐번호에서 뽑아 번호함에 저장해 둔 번호면 어떤 방식으로 뽑았는지 같이 올림
+  // 로또 찐 번호에서 뽑아 번호함에 저장해 둔 번호면 어떤 방식으로 뽑았는지 같이 올림
   const fromApp = saved.find((s) => s.method !== 'ticket' && isSameSet(s.numbers, chosen.nums));
   const method = fromApp ? `${METHOD_LABEL[fromApp.method]}(으)로 뽑은 번호 · ${fromApp.title}`.slice(0, 60) : null;
 

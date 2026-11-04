@@ -6,7 +6,7 @@ import { Ball, BallRow } from './Ball';
 import { PushCard } from './PushCard';
 
 export function shareText(r: GenResult): string {
-  return `${r.emoji} ${r.title}\n${r.numbers.join('  ')}\n\n로또 찐번호에서 ${METHOD_LABEL[r.method]}(으)로 만든 번호예요 (재미로 보는 번호)\n${location.href.split('#')[0]}`;
+  return `${r.emoji} ${r.title}\n${r.numbers.join('  ')}\n\n로또 찐 번호에서 ${METHOD_LABEL[r.method]}(으)로 만든 번호예요 (재미로 보는 번호)\n${location.href.split('#')[0]}`;
 }
 
 export async function share(r: GenResult, toast: (m: string) => void) {
@@ -77,7 +77,7 @@ export function ResultCard({ result, index, expanded = true }: Props) {
 
 function slipText(list: GenResult[]): string {
   const rows = list.map((r, i) => `${String.fromCharCode(65 + i)}  ${r.numbers.map((n) => String(n).padStart(2, ' ')).join('  ')}  ${r.emoji}`);
-  return `🎱 로또 찐번호 ${list.length}게임\n${rows.join('\n')}\n\n재미로 보는 번호예요\n${location.href.split('#')[0]}`;
+  return `🎱 로또 찐 번호 ${list.length}게임\n${rows.join('\n')}\n\n재미로 보는 번호예요\n${location.href.split('#')[0]}`;
 }
 
 /** 여러 게임: 복권 용지처럼 한 장에 한 줄씩. 줄을 누르면 번호가 나온 이유가 펼쳐진다. */
