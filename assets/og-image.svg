@@ -52,7 +52,7 @@
   <!-- 글 -->
   <text x="610" y="232" font-family="Malgun Gothic, sans-serif" font-weight="700" font-size="92" fill="#ffffff" letter-spacing="-3">로또 찐 명당</text>
   <text x="614" y="310" font-family="Malgun Gothic, sans-serif" font-size="34" fill="#c9d2e6">꿈 해몽·생일·통계로 뽑는 내 번호</text>
-  <text x="614" y="358" font-family="Malgun Gothic, sans-serif" font-size="34" fill="#c9d2e6">복권 QR 찍으면 당첨 확인까지</text>
+  <text x="614" y="358" font-family="Malgun Gothic, sans-serif" font-size="34" fill="#c9d2e6">대박번호 받기로 대박나세요~!</text>
 
   <!-- 작은 공 6개 -->
   <g font-family="Malgun Gothic, sans-serif" font-weight="700" font-size="25" text-anchor="middle" fill="#18203a">
