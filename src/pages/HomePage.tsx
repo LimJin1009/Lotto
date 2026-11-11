@@ -126,6 +126,26 @@ export function HomePage() {
 
   const api = useRef<MachineApi | null>(null);
   const machineBox = useRef<HTMLElement>(null);
+
+  // 응원하기(카카오페이)에 다녀오면 추첨 버튼이 화면 아래에 오도록 추첨기에 맞춘다
+  useEffect(() => {
+    let away = false;
+    const offOpen = onJackpotOpen(() => {
+      if (isJackpotOpen()) away = true;
+    });
+    const back = () => {
+      if (document.visibilityState !== 'visible' || !away) return;
+      away = false;
+      machineBox.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    };
+    document.addEventListener('visibilitychange', back);
+    window.addEventListener('focus', back);
+    return () => {
+      offOpen();
+      document.removeEventListener('visibilitychange', back);
+      window.removeEventListener('focus', back);
+    };
+  }, []);
   const run = useRef(0);
   // 이번 추첨에서 뽑을 게임들과, 결과 목록에 이미 넣은 개수
   const batch = useRef<{ list: GenResult[]; done: number }>({ list: [], done: 0 });
