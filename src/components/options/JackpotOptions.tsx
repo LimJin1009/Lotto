@@ -5,7 +5,7 @@ import { JACKPOT_GAMES, openJackpot } from '../../lib/jackpot';
 // 응원을 권하는 말 (당첨이 더 잘 된다고는 말하지 않는다)
 const PITCH: ReactNode = (
   <>
-    이번 주는 느낌이 좋다면, 번호도 특별하게 받아 보세요. <b>개발자가 직접 고른 {JACKPOT_GAMES}게임</b>을 응원해 주신 분께만 드려요.
+    이번 주는 느낌이 좋다면, 번호도 특별하게 받아 보세요. <b>대박번호 {JACKPOT_GAMES}게임</b>을 응원해 주신 분께만 드려요.
   </>
 );
 

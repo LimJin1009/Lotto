@@ -278,19 +278,6 @@ export function HomePage() {
       <Countdown />
 
       <section className="card picker">
-        <button
-          type="button"
-          aria-pressed={jackpot}
-          className={`jackpot-cta${jackpot ? ' jackpot-cta-on' : ''}`}
-          onClick={() => setMode('jackpot')}
-          disabled={running}
-        >
-          <strong>
-            <span aria-hidden>💰</span> 대박번호 받기 {!jackpotOpen && <span aria-label="잠김">🔒</span>}
-          </strong>
-          <span>개발자가 공들여 고른 번호 10게임</span>
-        </button>
-        {jackpot && <JackpotOptions open={jackpotOpen} uses={jackpotUses} pairs={jackpotPool(draws).pairs} total={draws.length} />}
         <h2>어떤 방식으로 뽑을까요?</h2>
         <div className="modes" role="tablist">
           {MODES.map((m) => (
@@ -317,6 +304,22 @@ export function HomePage() {
         {mode === 'stats' && <StatsOptions value={strategy} onChange={setStrategy} lastNo={latest.no} />}
         {!jackpot && <FilterOptions value={filter} onChange={setFilter} disabled={running} />}
         {!jackpot && <GamePicker value={games} onChange={setGames} disabled={running} />}
+      </section>
+
+      {/* 대박번호: 방식 카드와 추첨기 사이에 금빛 띠로 따로 둔다. 누르면 아래로 펼쳐진다 */}
+      <section className="jackpot-spot">
+        <button
+          type="button"
+          aria-pressed={jackpot}
+          className={`jackpot-cta${jackpot ? ' jackpot-cta-on' : ''}`}
+          onClick={() => setMode('jackpot')}
+          disabled={running}
+        >
+          <strong>
+            <span aria-hidden>💰</span> 대박번호 받기 {!jackpotOpen && <span aria-label="잠김">🔒</span>}
+          </strong>
+        </button>
+        {jackpot && <JackpotOptions open={jackpotOpen} uses={jackpotUses} pairs={jackpotPool(draws).pairs} total={draws.length} />}
       </section>
 
       <section className="machine" ref={machineBox}>

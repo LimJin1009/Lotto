@@ -991,17 +991,21 @@ h2 small {
   opacity: 0.5;
 }
 
-/* 대박번호 받기: 카드 맨 위에 금빛으로 크게 */
+/* 대박번호 받기: 방식 카드와 추첨기 사이의 금빛 띠 */
+.jackpot-spot {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .jackpot-cta {
   position: relative;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
   width: 100%;
-  margin-bottom: 16px;
-  padding: 15px 12px 14px;
+  padding: 14px 12px;
   border: 0;
   border-radius: 16px;
   background: linear-gradient(135deg, #ffe066 0%, #f5b800 42%, #ff8a1f 100%);
@@ -1017,12 +1021,6 @@ h2 small {
   font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.01em;
-}
-
-.jackpot-cta > span {
-  font-size: 12.5px;
-  font-weight: 700;
-  opacity: 0.82;
 }
 
 /* 빛이 쉬지 않고 훑고 지나간다 */
@@ -1051,10 +1049,8 @@ h2 small {
 }
 
 .jackpot-cta-on {
-  box-shadow:
-    0 0 0 3px var(--surface),
-    0 0 0 6px #ff8a1f,
-    0 8px 24px rgba(245, 184, 0, 0.42);
+  outline: 3px solid #ff8a1f;
+  outline-offset: 3px;
 }
 
 .jackpot-cta:disabled {
@@ -1071,7 +1067,11 @@ h2 small {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, var(--line));
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
 .jackpot-pitch {
