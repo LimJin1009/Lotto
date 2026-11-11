@@ -1058,9 +1058,32 @@ h2 small {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jackpot-cta::after {
+  .jackpot-cta::after,
+  .btn-jackpot::after {
     animation: none;
   }
+}
+
+/* 대박번호가 열렸을 때의 10게임 추첨 버튼: 대박번호 받기 버튼과 똑같이 반짝인다 */
+.btn-jackpot {
+  position: relative;
+  overflow: hidden;
+  border: 0;
+  background: linear-gradient(135deg, #ffe066 0%, #f5b800 42%, #ff8a1f 100%);
+  color: #1f2a44;
+  box-shadow:
+    0 8px 24px rgba(245, 184, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.btn-jackpot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.6) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: jackpot-shine 1.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .jackpot {

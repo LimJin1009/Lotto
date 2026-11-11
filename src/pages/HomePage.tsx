@@ -319,7 +319,12 @@ export function HomePage() {
             {jackpot ? '바로 뽑기 ⚡' : '추첨 중…'}
           </button>
         ) : (
-          <button type="button" className="btn btn-gold btn-big" onClick={start} disabled={!!notReady}>
+          <button
+            type="button"
+            className={`btn btn-gold btn-big${jackpot && !notReady ? ' btn-jackpot' : ''}`}
+            onClick={start}
+            disabled={!!notReady}
+          >
             {notReady ?? `${count}게임 ${results.length ? '더 ' : ''}추첨${results.length ? '' : ' 시작'}`}
           </button>
         )}
