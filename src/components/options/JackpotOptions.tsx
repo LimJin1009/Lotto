@@ -31,7 +31,7 @@ export function JackpotOptions({ open, uses, pairs }: { open: boolean; uses: num
         </>
       )}
       <p className="opt-q">
-        역대 1등 번호 중 6개 가운데 5개가 똑같았던 회차 {pairs}쌍의 번호로 조합해요. 재미로 보는 번호이고, 당첨 확률은 다른 번호와 같아요.
+        1등 번호끼리 5개나 겹쳤던 {pairs}번의 순간, 그 번호들로만 조합했어요. 재미로 즐기는 번호이고, 당첨 확률은 모든 번호가 같아요.
       </p>
     </div>
   );
