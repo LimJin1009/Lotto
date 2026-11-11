@@ -44,8 +44,7 @@ function loadGames(): number {
 
 function GamePicker({ value, onChange, disabled }: { value: number; onChange: (n: number) => void; disabled: boolean }) {
   return (
-    <fieldset className="game-pick" disabled={disabled}>
-      <legend>몇 게임 뽑을까요?</legend>
+    <fieldset className="game-pick" aria-label="뽑을 게임 수" disabled={disabled}>
       {Array.from({ length: MAX_GAMES }, (_, i) => {
         const n = i + 1;
         return (
