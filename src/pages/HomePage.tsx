@@ -29,40 +29,8 @@ const MODES: { id: Mode; emoji: string; label: string }[] = [
   { id: 'stats', emoji: '📈', label: '통계' },
 ];
 
-/** 한 번에 뽑는 게임 수 (복권 한 장 = 5게임) */
-const MAX_GAMES = 5;
-const GAMES_KEY = 'lotto.games';
-
-function loadGames(): number {
-  try {
-    const n = Number(localStorage.getItem(GAMES_KEY));
-    return n >= 1 && n <= MAX_GAMES ? n : 1;
-  } catch {
-    return 1;
-  }
-}
-
-function GamePicker({ value, onChange, disabled }: { value: number; onChange: (n: number) => void; disabled: boolean }) {
-  return (
-    <fieldset className="game-pick" aria-label="뽑을 게임 수" disabled={disabled}>
-      {Array.from({ length: MAX_GAMES }, (_, i) => {
-        const n = i + 1;
-        return (
-          <label key={n} className={`game-box${n <= value ? ' game-on' : ''}`}>
-            <input
-              type="checkbox"
-              checked={n <= value}
-              // 켜진 맨 끝 칸을 다시 누르면 한 칸 줄인다
-              onChange={() => onChange(n === value && n > 1 ? n - 1 : n)}
-            />
-            <span aria-hidden>{n <= value ? '✓' : ''}</span>
-            {n}게임
-          </label>
-        );
-      })}
-    </fieldset>
-  );
-}
+/** 한 번에 뽑는 게임 수. 늘 1게임씩 뽑는다 (대박번호만 10게임) */
+const GAMES = 1;
 
 const SOON = ['🔮 오늘의 운세', '💞 궁합 번호', '🎬 추첨 영상 저장'];
 
@@ -143,15 +111,6 @@ export function HomePage() {
     return { dream: DREAMS.find((d) => d.id === id) ?? null, sit: null };
   });
   const [mode, setMode] = useState<Mode>(() => (dream.dream ? 'dream' : 'random'));
-  const [games, setGamesState] = useState(loadGames);
-  const setGames = (n: number) => {
-    setGamesState(n);
-    try {
-      localStorage.setItem(GAMES_KEY, String(n));
-    } catch {
-      /* 저장 못 해도 이번엔 그대로 씀 */
-    }
-  };
   const [personal, setPersonal] = useState<PersonalInput[]>([{ kind: 'birthday', value: '' }]);
   const [strategy, setStrategy] = useState<StatsStrategy>('hot');
   const [wish, setWish] = useState('');
@@ -195,7 +154,7 @@ export function HomePage() {
 
   // 대박번호는 늘 10게임이고, 고정수·제외수를 쓰지 않는다 (쌍둥이 회차 번호만 나와야 하므로)
   const jackpot = mode === 'jackpot';
-  const count = jackpot ? JACKPOT_GAMES : games;
+  const count = jackpot ? JACKPOT_GAMES : GAMES;
 
   const build = (game: number): GenResult => {
     if (mode === 'dream' && dream.dream) return dreamNumbers(dream.dream, dream.sit ?? undefined);
@@ -302,7 +261,6 @@ export function HomePage() {
         {mode === 'wish' && <WishOptions value={wish} onChange={setWish} />}
         {mode === 'stats' && <StatsOptions value={strategy} onChange={setStrategy} lastNo={latest.no} />}
         {!jackpot && <FilterOptions value={filter} onChange={setFilter} disabled={running} />}
-        {!jackpot && <GamePicker value={games} onChange={setGames} disabled={running} />}
       </section>
 
       {/* 대박번호: 방식 카드와 추첨기 사이에 금빛 띠로 따로 둔다. 누르면 아래로 펼쳐진다 */}
