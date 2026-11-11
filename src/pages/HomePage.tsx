@@ -290,7 +290,7 @@ export function HomePage() {
           </strong>
           <span>개발자가 공들여 고른 번호 10게임</span>
         </button>
-        {jackpot && <JackpotOptions open={jackpotOpen} uses={jackpotUses} pairs={jackpotPool(draws).pairs} />}
+        {jackpot && <JackpotOptions open={jackpotOpen} uses={jackpotUses} pairs={jackpotPool(draws).pairs} total={draws.length} />}
         <h2>어떤 방식으로 뽑을까요?</h2>
         <div className="modes" role="tablist">
           {MODES.map((m) => (

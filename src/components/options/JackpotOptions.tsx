@@ -10,7 +10,7 @@ const PITCH: ReactNode = (
 );
 
 /** 대박번호: 개발자 응원하기를 누르면 열리고, 10게임을 받으면 다시 잠긴다 */
-export function JackpotOptions({ open, uses, pairs }: { open: boolean; uses: number; pairs: number }) {
+export function JackpotOptions({ open, uses, pairs, total }: { open: boolean; uses: number; pairs: number; total: number }) {
   return (
     <div className="jackpot">
       {uses > 0 && !open ? (
@@ -31,7 +31,7 @@ export function JackpotOptions({ open, uses, pairs }: { open: boolean; uses: num
         </>
       )}
       <p className="opt-q">
-        1등 번호끼리 5개나 겹쳤던 {pairs}번의 순간, 그 번호들로만 조합했어요. 재미로 즐기는 번호이고, 당첨 확률은 모든 번호가 같아요.
+        {total.toLocaleString('ko-KR')}번의 추첨에서 딱 {pairs}번 있었던 우연, 그 번호들만 담았어요. 행운은 재미로, 당첨 확률은 모든 번호가 같아요.
       </p>
     </div>
   );
