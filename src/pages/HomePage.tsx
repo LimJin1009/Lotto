@@ -4,12 +4,14 @@ import { Ball, BallRow } from '../components/Ball';
 import { DrawMachine, type MachineApi } from '../components/DrawMachine';
 import { DreamOptions, type DreamChoice } from '../components/options/DreamOptions';
 import { FilterOptions } from '../components/options/FilterOptions';
+import { JackpotOptions } from '../components/options/JackpotOptions';
 import { PersonalOptions } from '../components/options/PersonalOptions';
 import { StatsOptions } from '../components/options/StatsOptions';
 import { WishOptions } from '../components/options/WishOptions';
 import { pushResult, ResultList } from '../components/ResultCard';
 import { DREAMS, dreamNumbers } from '../lib/dream';
 import { drawTime, formatDate, rankOf } from '../lib/draws';
+import { isJackpotOpen, JACKPOT_GAMES, jackpotNumbers, jackpotPool, onJackpotOpen } from '../lib/jackpot';
 import { extractPicks, personalNumbers, type PersonalInput } from '../lib/personal';
 import { applyFilter, loadFilter, saveFilter, type PickFilter } from '../lib/picks';
 import { randInt, randomNumbers } from '../lib/random';
@@ -17,7 +19,7 @@ import { statsNumbers, type StatsStrategy } from '../lib/stats';
 import { normalizeWish, wishNumbers } from '../lib/wish';
 import type { Draw, GenResult } from '../lib/types';
 
-type Mode = 'random' | 'dream' | 'personal' | 'wish' | 'stats';
+type Mode = 'random' | 'dream' | 'personal' | 'wish' | 'stats' | 'jackpot';
 
 const MODES: { id: Mode; emoji: string; label: string }[] = [
   { id: 'random', emoji: '🎱', label: '자동 추첨' },
@@ -159,6 +161,9 @@ export function HomePage() {
     setFilterState(f);
     saveFilter(f);
   };
+  // 대박번호는 개발자 응원하기를 누르면 열린다
+  const [jackpotOpen, setJackpotOpen] = useState(isJackpotOpen);
+  useEffect(() => onJackpotOpen(() => setJackpotOpen(true)), []);
 
   const api = useRef<MachineApi | null>(null);
   const machineBox = useRef<HTMLElement>(null);
@@ -184,13 +189,20 @@ export function HomePage() {
         ? '숫자를 먼저 넣어 주세요'
         : mode === 'wish' && !normalizeWish(wish)
           ? '문장을 먼저 써 주세요'
-          : null;
+          : mode === 'jackpot' && !jackpotOpen
+            ? '응원하면 대박번호가 열려요'
+            : null;
+
+  // 대박번호는 늘 10게임이고, 고정수·제외수를 쓰지 않는다 (쌍둥이 회차 번호만 나와야 하므로)
+  const jackpot = mode === 'jackpot';
+  const count = jackpot ? JACKPOT_GAMES : games;
 
   const build = (game: number): GenResult => {
     if (mode === 'dream' && dream.dream) return dreamNumbers(dream.dream, dream.sit ?? undefined);
     if (mode === 'personal') return personalNumbers(usablePersonal);
     if (mode === 'wish') return wishNumbers(wish, game);
     if (mode === 'stats') return statsNumbers(draws, strategy);
+    if (mode === 'jackpot') return jackpotNumbers(draws);
     return randomResult();
   };
 
@@ -199,7 +211,7 @@ export function HomePage() {
     if (!m || notReady) return;
     const id = ++run.current;
     // 번호는 추첨 전에 이미 정해 둔다. 추첨기는 그 공을 꺼내는 모습을 보여줄 뿐이다.
-    const list = Array.from({ length: games }, (_, g) => applyFilter(build(g), filter));
+    const list = Array.from({ length: count }, (_, g) => (jackpot ? build(g) : applyFilter(build(g), filter)));
     batch.current = { list, done: 0 };
     setRunning(true);
     machineBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -280,13 +292,24 @@ export function HomePage() {
             </button>
           ))}
         </div>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'jackpot'}
+          className={`mode mode-jackpot${mode === 'jackpot' ? ' mode-on' : ''}`}
+          onClick={() => setMode('jackpot')}
+          disabled={running}
+        >
+          <span aria-hidden>💰</span> 대박번호 받기 {!jackpotOpen && <span aria-label="잠김">🔒</span>}
+        </button>
+        {mode === 'jackpot' && <JackpotOptions open={jackpotOpen} pairs={jackpotPool(draws).pairs} />}
         {mode === 'random' && <p className="opt-q">아무것도 넣지 않고 추첨기가 공 6개를 자동으로 뽑아요.</p>}
         {mode === 'dream' && <DreamOptions value={dream} onChange={setDream} />}
         {mode === 'personal' && <PersonalOptions value={personal} onChange={setPersonal} />}
         {mode === 'wish' && <WishOptions value={wish} onChange={setWish} />}
         {mode === 'stats' && <StatsOptions value={strategy} onChange={setStrategy} lastNo={latest.no} />}
-        <FilterOptions value={filter} onChange={setFilter} disabled={running} />
-        <GamePicker value={games} onChange={setGames} disabled={running} />
+        {!jackpot && <FilterOptions value={filter} onChange={setFilter} disabled={running} />}
+        {!jackpot && <GamePicker value={games} onChange={setGames} disabled={running} />}
       </section>
 
       <section className="machine" ref={machineBox}>
@@ -309,7 +332,7 @@ export function HomePage() {
           </button>
         ) : (
           <button type="button" className="btn btn-gold btn-big" onClick={start} disabled={!!notReady}>
-            {notReady ?? `${games}게임 ${results.length ? '더 ' : ''}추첨${results.length ? '' : ' 시작'}`}
+            {notReady ?? `${count}게임 ${results.length ? '더 ' : ''}추첨${results.length ? '' : ' 시작'}`}
           </button>
         )}
       </section>

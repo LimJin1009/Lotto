@@ -5,6 +5,7 @@ import { extractPicks, personalNumbers } from './personal';
 import { gaps, isBalanced, statsNumbers } from './stats';
 import type { GenResult } from './types';
 import { C, R, BR, extractBall, makeWorld, stepWorld, tiltGravity } from './machine';
+import { jackpotNumbers, jackpotPool, twinDraws } from './jackpot';
 import { applyFilter, FIXED_REASON, toggleFilter } from './picks';
 import { scoreboard } from './saved';
 import { makeShakeDetector } from './shake';
@@ -287,5 +288,36 @@ describe('내 번호 성적표', () => {
     const sc = scoreboard([set(100, [1, 2, 3, 10, 11, 12]), set(100, [1, 2, 3, 4, 11, 12]), set(100, [1, 2, 20, 21, 22, 23]), set(101, [1, 2, 3, 4, 5, 6])], [draw]);
     expect(sc).toEqual({ total: 4, checked: 3, wins: { 5: 1, 4: 1 }, winCount: 2, bestRank: 4, bestHits: 4 });
     expect(scoreboard([], [draw])).toMatchObject({ total: 0, checked: 0, winCount: 0, bestHits: 0 });
+  });
+});
+
+describe('대박번호', () => {
+  const d = (no: number, nums: number[]) => ({ no, date: '2026-01-03', nums, bonus: 45 });
+  const draws = [d(1, [1, 2, 3, 4, 5, 6]), d(2, [10, 20, 30, 40, 41, 42]), d(3, [1, 2, 3, 4, 5, 7]), d(4, [11, 12, 13, 14, 15, 16]), d(5, [1, 2, 3, 4, 8, 9])];
+
+  it('6개 중 5개가 같은 회차 쌍만 찾는다', () => {
+    expect(twinDraws(draws).map(([a, b]) => [a.no, b.no])).toEqual([[1, 3]]);
+    const pool = jackpotPool(draws);
+    expect(pool.pairs).toBe(1);
+    expect([...pool.rounds.keys()].sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5, 6, 7]);
+    expect(pool.rounds.get(1)).toEqual([1, 3]);
+    expect(pool.rounds.get(7)).toEqual([3]);
+  });
+
+  it('그 회차들에 나온 번호에서만 6개를 뽑는다', () => {
+    for (let i = 0; i < 30; i++) {
+      const r = jackpotNumbers(draws);
+      expect(r.method).toBe('jackpot');
+      expect(r.numbers).toHaveLength(6);
+      expect(new Set(r.numbers).size).toBe(6);
+      expect(r.numbers.every((n) => n >= 1 && n <= 7)).toBe(true);
+      expect(r.numbers.every((n) => r.reasons[n].includes('회'))).toBe(true);
+    }
+  });
+
+  it('실제 당첨번호에는 5개가 겹친 쌍이 21쌍 있다 (1248회까지)', () => {
+    const twins = twinDraws(BUNDLED.filter((x) => x.no <= 1248));
+    expect(twins).toHaveLength(21);
+    expect(twins.some(([a, b]) => a.no === 64 && b.no === 640)).toBe(true);
   });
 });

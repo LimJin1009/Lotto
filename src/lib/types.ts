@@ -1,4 +1,4 @@
-export type MethodId = 'dream' | 'personal' | 'wish' | 'stats' | 'machine' | 'ticket';
+export type MethodId = 'dream' | 'personal' | 'wish' | 'stats' | 'machine' | 'ticket' | 'jackpot';
 
 export const METHOD_LABEL: Record<MethodId, string> = {
   dream: '꿈 해몽',
@@ -7,6 +7,7 @@ export const METHOD_LABEL: Record<MethodId, string> = {
   stats: '통계 분석',
   machine: '자동 추첨',
   ticket: '산 복권',
+  jackpot: '대박번호',
 };
 
 /** 번호 생성 결과 한 세트 */

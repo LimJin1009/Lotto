@@ -179,7 +179,7 @@ export function ResultList({ results, onClear }: { results: GenResult[]; onClear
   );
 }
 
-/** 새 결과를 맨 위에 추가하고 5게임까지만 남긴다 */
+/** 새 결과를 맨 위에 추가하고 5게임까지만 남긴다 (대박번호는 10게임) */
 export function pushResult(list: GenResult[], r: GenResult): GenResult[] {
-  return [r, ...list].slice(0, 5);
+  return [r, ...list].slice(0, r.method === 'jackpot' ? 10 : 5);
 }
