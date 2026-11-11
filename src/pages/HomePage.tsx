@@ -273,6 +273,19 @@ export function HomePage() {
       <Countdown />
 
       <section className="card picker">
+        <button
+          type="button"
+          aria-pressed={jackpot}
+          className={`jackpot-cta${jackpot ? ' jackpot-cta-on' : ''}`}
+          onClick={() => setMode('jackpot')}
+          disabled={running}
+        >
+          <strong>
+            <span aria-hidden>💰</span> 대박번호 받기 {!jackpotOpen && <span aria-label="잠김">🔒</span>}
+          </strong>
+          <span>개발자가 직접 조합한 강력한 번호 10게임</span>
+        </button>
+        {jackpot && <JackpotOptions open={jackpotOpen} pairs={jackpotPool(draws).pairs} />}
         <h2>어떤 방식으로 뽑을까요?</h2>
         <div className="modes" role="tablist">
           {MODES.map((m) => (
@@ -292,17 +305,6 @@ export function HomePage() {
             </button>
           ))}
         </div>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={mode === 'jackpot'}
-          className={`mode mode-jackpot${mode === 'jackpot' ? ' mode-on' : ''}`}
-          onClick={() => setMode('jackpot')}
-          disabled={running}
-        >
-          <span aria-hidden>💰</span> 대박번호 받기 {!jackpotOpen && <span aria-label="잠김">🔒</span>}
-        </button>
-        {mode === 'jackpot' && <JackpotOptions open={jackpotOpen} pairs={jackpotPool(draws).pairs} />}
         {mode === 'random' && <p className="opt-q">아무것도 넣지 않고 추첨기가 공 6개를 자동으로 뽑아요.</p>}
         {mode === 'dream' && <DreamOptions value={dream} onChange={setDream} />}
         {mode === 'personal' && <PersonalOptions value={personal} onChange={setPersonal} />}

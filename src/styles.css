@@ -991,23 +991,98 @@ h2 small {
   opacity: 0.5;
 }
 
-/* 대박번호 받기: 다섯 방식 아래에 한 줄로 */
-.mode-jackpot {
-  flex-direction: row;
-  justify-content: center;
-  gap: 6px;
+/* 대박번호 받기: 카드 맨 위에 금빛으로 크게 */
+.jackpot-cta {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
   width: 100%;
-  margin-top: 5px;
-  padding: 12px;
-  font-size: 14.5px;
-  border-color: color-mix(in srgb, var(--gold) 55%, var(--line));
-  background: color-mix(in srgb, var(--gold) 12%, var(--surface));
+  margin-bottom: 16px;
+  padding: 15px 12px 14px;
+  border: 0;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffe066 0%, #f5b800 42%, #ff8a1f 100%);
+  color: #1f2a44;
+  font: inherit;
+  cursor: pointer;
+  box-shadow:
+    0 8px 24px rgba(245, 184, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.jackpot-cta strong {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.jackpot-cta > span {
+  font-size: 12.5px;
+  font-weight: 700;
+  opacity: 0.82;
+}
+
+/* 빛이 한 번씩 훑고 지나간다 */
+.jackpot-cta::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.6) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: jackpot-shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes jackpot-shine {
+  0%,
+  55% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.jackpot-cta:active {
+  transform: translateY(1px);
+}
+
+.jackpot-cta-on {
+  box-shadow:
+    0 0 0 3px var(--surface),
+    0 0 0 6px #ff8a1f,
+    0 8px 24px rgba(245, 184, 0, 0.42);
+}
+
+.jackpot-cta:disabled {
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jackpot-cta::after {
+    animation: none;
+  }
 }
 
 .jackpot {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  margin-bottom: 18px;
+}
+
+.jackpot-pitch {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.jackpot-pitch b {
+  color: var(--primary);
 }
 
 .jackpot .btn {
