@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { handle } from './app.mjs';
 import { FakeD1 } from './fake-d1.mjs';
-import { isPushEndpoint, runPushRound, vapidJwt, winMessage } from './push.mjs';
+import { buyReminderMessage, isPushEndpoint, runBuyReminder, runPushRound, vapidJwt, winMessage } from './push.mjs';
 
 const b64urlToBytes = (s) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (s.length % 4)) % 4)), (c) => c.charCodeAt(0));
 const bytesToB64url = (b) => btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -138,6 +138,40 @@ describe('당첨 알림', () => {
     await post('unsubscribe', { endpoint: FCM(4) });
     expect(env.DB.db.prepare('SELECT COUNT(*) c FROM watch WHERE round = 1249').get().c).toBe(0);
     expect(env.DB.db.prepare('SELECT COUNT(*) c FROM subs WHERE endpoint = ?').get(FCM(4)).c).toBe(0);
+  });
+
+  it('구매 알림: 받겠다고 한 기기에만, 토요일 18시대에 하루 한 번', async () => {
+    pushStatus = () => 201;
+    await post('sync', { endpoint: FCM(8), sets: [], remind: true });
+    await post('sync', { endpoint: FCM(9), sets: [] }); // 받겠다고 안 함
+    const remindOf = (n) => env.DB.db.prepare('SELECT remind FROM subs WHERE endpoint = ?').get(FCM(n)).remind;
+    expect(remindOf(8)).toBe(1);
+    expect(remindOf(9)).toBe(0);
+    // 예전 앱(값을 안 보냄)이 다시 맡겨도 설정은 그대로
+    await post('sync', { endpoint: FCM(8), sets: [] });
+    expect(remindOf(8)).toBe(1);
+
+    const none = { sent: 0, gone: 0, failed: 0 };
+    pushed.length = 0;
+    // 다른 시간에는 아무것도 안 보냄 (토요일 17:50, 금요일 18:00)
+    expect(await runBuyReminder(env, { fetchImpl: fakeFetch, now: new Date('2026-11-14T08:50:00Z') })).toEqual(none);
+    expect(await runBuyReminder(env, { fetchImpl: fakeFetch, now: new Date('2026-11-13T09:00:00Z') })).toEqual(none);
+    expect(pushed).toHaveLength(0);
+
+    // 토요일 18:00 (한국)
+    expect(await runBuyReminder(env, { fetchImpl: fakeFetch, now: new Date('2026-11-14T09:00:00Z') })).toEqual({ sent: 1, gone: 0, failed: 0 });
+    expect(pushed.map((p) => p.url)).toEqual([FCM(8)]);
+    // 10분 뒤 다시 돌아도 같은 날은 안 보내고, 다음 주에는 다시 보냄
+    expect((await runBuyReminder(env, { fetchImpl: fakeFetch, now: new Date('2026-11-14T09:10:00Z') })).sent).toBe(0);
+    expect((await runBuyReminder(env, { fetchImpl: fakeFetch, now: new Date('2026-11-21T09:00:00Z') })).sent).toBe(1);
+
+    // 휴대폰이 가져가는 문구
+    env.DB.db.prepare('UPDATE inbox SET created_at = ? WHERE sub_id IN (SELECT id FROM subs WHERE endpoint = ?)').run(new Date().toISOString(), FCM(8));
+    expect(await (await post('inbox', { endpoint: FCM(8) })).json()).toMatchObject(buyReminderMessage());
+
+    // 끄면 안 보냄
+    await post('sync', { endpoint: FCM(8), sets: [], remind: false });
+    expect((await runBuyReminder(env, { fetchImpl: fakeFetch, now: new Date('2026-11-28T09:00:00Z') })).sent).toBe(0);
   });
 
   it('시험 알림은 관리자 열쇠가 있어야 함', async () => {

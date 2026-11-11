@@ -8,6 +8,16 @@ import type { SavedSet } from './types';
 export type PushState = 'checking' | 'on' | 'off' | 'denied' | 'ios-install' | 'inapp' | 'unsupported';
 
 const SYNC_KEY = 'lotto.push.synced';
+const REMIND_KEY = 'lotto.push.remind';
+
+/** 구매 알림(토요일 18시 "오늘 판매 마감")을 받기로 했는지 */
+export function loadRemind(): boolean {
+  try {
+    return localStorage.getItem(REMIND_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 function supported(): boolean {
   return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window && !!REVIEWS_API && !!VAPID_PUBLIC_KEY;
@@ -52,13 +62,14 @@ export async function syncPush(saved: SavedSet[], latestNo: number, force = fals
   const sub = await currentSub();
   if (!sub) return;
   const sets = pendingSets(saved, latestNo);
-  const sig = `${sub.endpoint}|${JSON.stringify(sets)}`;
+  const remind = loadRemind();
+  const sig = `${sub.endpoint}|${JSON.stringify(sets)}|${remind ? 'r' : ''}`;
   try {
     if (!force && localStorage.getItem(SYNC_KEY) === sig) return;
   } catch {
     /* 기록을 못 읽으면 그냥 보냄 */
   }
-  const res = await post('sync', { endpoint: sub.endpoint, sets });
+  const res = await post('sync', { endpoint: sub.endpoint, sets, remind });
   if (!res.ok) throw new Error((await res.json().catch(() => null))?.message ?? '알림 설정을 저장하지 못했어요');
   try {
     localStorage.setItem(SYNC_KEY, sig);
@@ -84,6 +95,7 @@ export async function disablePush(): Promise<void> {
   await sub.unsubscribe();
   try {
     localStorage.removeItem(SYNC_KEY);
+    localStorage.removeItem(REMIND_KEY);
   } catch {
     /* 무시 */
   }
@@ -94,6 +106,7 @@ export function usePush(saved: SavedSet[], latestNo: number) {
   const [state, setState] = useState<PushState>('checking');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [remind, setRemindState] = useState(loadRemind);
 
   useEffect(() => {
     pushState().then(setState);
@@ -123,5 +136,32 @@ export function usePush(saved: SavedSet[], latestNo: number) {
     }
   }, []);
 
-  return { state, busy, error, turnOn, turnOff };
+  // 구매 알림 켜고 끄기: 서버에 못 알리면 원래대로 되돌린다
+  const setRemind = useCallback(
+    async (on: boolean) => {
+      const store = (v: boolean) => {
+        try {
+          if (v) localStorage.setItem(REMIND_KEY, '1');
+          else localStorage.removeItem(REMIND_KEY);
+        } catch {
+          /* 무시 */
+        }
+        setRemindState(v);
+      };
+      setBusy(true);
+      setError(null);
+      store(on);
+      try {
+        await syncPush(saved, latestNo, true);
+      } catch (e) {
+        store(!on);
+        setError(e instanceof Error && e.message ? e.message : '알림 설정을 저장하지 못했어요');
+      } finally {
+        setBusy(false);
+      }
+    },
+    [saved, latestNo],
+  );
+
+  return { state, busy, error, turnOn, turnOff, remind: state === 'on' && remind, setRemind };
 }

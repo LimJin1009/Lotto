@@ -1902,11 +1902,163 @@ h2 small {
   line-height: 1.5;
 }
 
+/* ── 고정수·제외수 ── */
+.filter {
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.filter-sum {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.filter-body {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-kinds .link-btn {
+  margin-left: auto;
+  align-self: center;
+  font-size: 13px;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 5px;
+}
+
+.filter-num {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-num:disabled {
+  opacity: 0.4;
+}
+
+.filter-fixed {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.filter-excluded {
+  background: var(--surface-2);
+  border-style: dashed;
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
 .form-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+/* ── 내 번호 성적표 ── */
+.score-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.score-grid > div {
+  min-width: 0;
+  padding: 10px 4px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  text-align: center;
+}
+
+.score-grid dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+
+.score-grid dd {
+  margin: 4px 0 0;
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.score-grid dd small {
+  display: block;
+  margin-top: 2px;
+  min-height: 14px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.score-win {
+  background: color-mix(in srgb, var(--win) 14%, var(--surface)) !important;
+}
+
+.score-win dd {
+  color: var(--win);
+}
+
+.score-ranks,
+.score-note {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.score-ranks {
+  font-weight: 700;
+}
+
+.score-note {
+  font-size: 12.5px;
+  color: var(--ink-2);
 }
 
 /* ── 당첨 알림 ── */
@@ -1934,6 +2086,32 @@ h2 small {
   justify-content: space-between;
   align-items: center;
   gap: 8px;
+}
+
+.push-remind {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--surface-2);
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.push-remind input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  accent-color: var(--primary);
+}
+
+.push-remind b {
+  display: block;
+  color: var(--ink);
 }
 
 .push-card .push-note {

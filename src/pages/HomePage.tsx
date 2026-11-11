@@ -3,6 +3,7 @@ import { useApp } from '../app-context';
 import { Ball, BallRow } from '../components/Ball';
 import { DrawMachine, type MachineApi } from '../components/DrawMachine';
 import { DreamOptions, type DreamChoice } from '../components/options/DreamOptions';
+import { FilterOptions } from '../components/options/FilterOptions';
 import { PersonalOptions } from '../components/options/PersonalOptions';
 import { StatsOptions } from '../components/options/StatsOptions';
 import { WishOptions } from '../components/options/WishOptions';
@@ -10,6 +11,7 @@ import { pushResult, ResultList } from '../components/ResultCard';
 import { DREAMS, dreamNumbers } from '../lib/dream';
 import { drawTime, formatDate, rankOf } from '../lib/draws';
 import { extractPicks, personalNumbers, type PersonalInput } from '../lib/personal';
+import { applyFilter, loadFilter, saveFilter, type PickFilter } from '../lib/picks';
 import { randInt, randomNumbers } from '../lib/random';
 import { statsNumbers, type StatsStrategy } from '../lib/stats';
 import { normalizeWish, wishNumbers } from '../lib/wish';
@@ -152,6 +154,11 @@ export function HomePage() {
   const [personal, setPersonal] = useState<PersonalInput[]>([{ kind: 'birthday', value: '' }]);
   const [strategy, setStrategy] = useState<StatsStrategy>('hot');
   const [wish, setWish] = useState('');
+  const [filter, setFilterState] = useState<PickFilter>(loadFilter);
+  const setFilter = (f: PickFilter) => {
+    setFilterState(f);
+    saveFilter(f);
+  };
 
   const api = useRef<MachineApi | null>(null);
   const machineBox = useRef<HTMLElement>(null);
@@ -192,7 +199,7 @@ export function HomePage() {
     if (!m || notReady) return;
     const id = ++run.current;
     // 번호는 추첨 전에 이미 정해 둔다. 추첨기는 그 공을 꺼내는 모습을 보여줄 뿐이다.
-    const list = Array.from({ length: games }, (_, g) => build(g));
+    const list = Array.from({ length: games }, (_, g) => applyFilter(build(g), filter));
     batch.current = { list, done: 0 };
     setRunning(true);
     machineBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -223,6 +230,12 @@ export function HomePage() {
       }
     }
     setRunning(false);
+  };
+
+  // 휴대폰을 흔들면 추첨 시작 (추첨 중이거나 입력이 덜 됐으면 아무 일도 없음)
+  const shake = useRef(() => {});
+  shake.current = () => {
+    if (!running) start();
   };
 
   // 바로 뽑기: 남은 공과 남은 게임을 기다리지 않고 한 번에 보여 준다
@@ -272,6 +285,7 @@ export function HomePage() {
         {mode === 'personal' && <PersonalOptions value={personal} onChange={setPersonal} />}
         {mode === 'wish' && <WishOptions value={wish} onChange={setWish} />}
         {mode === 'stats' && <StatsOptions value={strategy} onChange={setStrategy} lastNo={latest.no} />}
+        <FilterOptions value={filter} onChange={setFilter} disabled={running} />
         <GamePicker value={games} onChange={setGames} disabled={running} />
       </section>
 
@@ -281,7 +295,7 @@ export function HomePage() {
             ? `${current.emoji} ${current.title}${batch.current.list.length > 1 ? ` · ${gameNo}/${batch.current.list.length}게임` : ''}`
             : '로또 찐 번호 추첨기'}
         </div>
-        <DrawMachine apiRef={api} />
+        <DrawMachine apiRef={api} onShake={() => shake.current()} />
         <div className="tray" aria-live="polite">
           {Array.from({ length: 6 }, (_, i) => (
             <span key={i} className="tray-slot">

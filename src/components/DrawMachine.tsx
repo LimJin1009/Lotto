@@ -89,14 +89,14 @@ export interface MachineApi {
   reset: () => void;
 }
 
-export function DrawMachine({ apiRef }: { apiRef: React.RefObject<MachineApi | null> }) {
+export function DrawMachine({ apiRef, onShake }: { apiRef: React.RefObject<MachineApi | null>; onShake?: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const world = useRef(makeWorld());
-  // 휴대폰을 기울이면 공이 그쪽으로 떨어짐
+  // 휴대폰을 기울이면 공이 그쪽으로 떨어지고, 흔들면 추첨을 시작함
   const tilt = useTilt((g) => {
     world.current.tx = g.x;
     world.current.ty = g.y;
-  });
+  }, onShake);
 
   useEffect(() => {
     apiRef.current = {
@@ -238,10 +238,10 @@ export function DrawMachine({ apiRef }: { apiRef: React.RefObject<MachineApi | n
   return (
     <>
       <canvas ref={canvas} className="machine-canvas" style={{ width: SIZE, height: SIZE }} role="img" aria-label="로또 추첨기" />
-      {tilt.state === 'on' && tilt.live && <p className="tilt-hint">📱 휴대폰을 기울이면 공이 굴러가요</p>}
+      {tilt.state === 'on' && tilt.live && <p className="tilt-hint">📱 기울이면 공이 굴러가고, 흔들면 추첨해요</p>}
       {tilt.state === 'need-permission' && navigator.maxTouchPoints > 0 && (
         <button type="button" className="tilt-hint tilt-btn" onClick={tilt.enable}>
-          📱 휴대폰을 기울여 공 굴리기 켜기
+          📱 기울여 공 굴리기·흔들어 뽑기 켜기
         </button>
       )}
     </>

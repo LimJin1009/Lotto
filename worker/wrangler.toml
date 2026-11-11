@@ -17,4 +17,5 @@ VAPID_PUBLIC = "BGWjqDTlWkuJON7Z5tzuK_xvKc8w-vcXlWC9hq9TZsLpFGhguqIOCNDPQyrPpdXs
 
 # 당첨 알림: 토요일 21:00~23:59, 일요일 09:00~23:59 (한국 시간) 10분마다 확인. 크론은 UTC 기준
 [triggers]
-crons = ["*/10 12-14 * * SAT", "*/10 0-14 * * SUN"]
+# 구매 알림: 토요일 18:00~18:59 (한국 시간) 10분마다, 한 번에 40개씩
+crons = ["*/10 9 * * SAT", "*/10 12-14 * * SAT", "*/10 0-14 * * SUN"]

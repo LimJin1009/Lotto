@@ -5,6 +5,9 @@ import { extractPicks, personalNumbers } from './personal';
 import { gaps, isBalanced, statsNumbers } from './stats';
 import type { GenResult } from './types';
 import { C, R, BR, extractBall, makeWorld, stepWorld, tiltGravity } from './machine';
+import { applyFilter, FIXED_REASON, toggleFilter } from './picks';
+import { scoreboard } from './saved';
+import { makeShakeDetector } from './shake';
 
 describe('추첨기', () => {
   it('휴대폰 기울기로 화면 속 아래 방향을 구한다', () => {
@@ -200,5 +203,89 @@ describe('이름·소원 번호', () => {
 
   it('긴 문장도 6개만', () => {
     expectValidSet(wishNumbers('우리 가족 모두 건강하고 행복하게 해 주세요'));
+  });
+});
+
+describe('고정수·제외수', () => {
+  const base: GenResult = {
+    method: 'dream',
+    title: '시험',
+    emoji: '🐷',
+    numbers: [3, 8, 15, 22, 31, 40],
+    reasons: { 3: '꿈 숫자', 8: '꿈 숫자', 15: '무작위로 채움', 22: '무작위로 채움', 31: '무작위로 채움', 40: '꿈 숫자' },
+  };
+
+  it('아무것도 안 고르면 그대로', () => {
+    expect(applyFilter(base, { fixed: [], excluded: [] })).toBe(base);
+  });
+
+  it('고정수는 꼭 들어가고, 이유가 있는 번호를 먼저 남긴다', () => {
+    const r = applyFilter(base, { fixed: [7, 44], excluded: [] });
+    expect(r.numbers).toEqual([3, 7, 8, 15, 40, 44]);
+    expect(r.reasons[7]).toBe(FIXED_REASON);
+    expect(r.reasons[3]).toBe('꿈 숫자');
+  });
+
+  it('제외수는 나오지 않고, 빈자리는 제외수를 피해 채운다', () => {
+    const excluded = [3, 15, ...Array.from({ length: 28 }, (_, i) => i + 16).filter((n) => ![22, 31, 40].includes(n))];
+    for (let i = 0; i < 50; i++) {
+      const r = applyFilter(base, { fixed: [1], excluded });
+      expect(r.numbers).toHaveLength(6);
+      expect(new Set(r.numbers).size).toBe(6);
+      expect(r.numbers).toContain(1);
+      expect(r.numbers.some((n) => excluded.includes(n))).toBe(false);
+      expect([...r.numbers].sort((a, b) => a - b)).toEqual(r.numbers);
+    }
+  });
+
+  it('한 번호는 고정수와 제외수 중 하나만, 고정수는 5개까지', () => {
+    let f = toggleFilter({ fixed: [], excluded: [9] }, 'fixed', 9);
+    expect(f).toEqual({ fixed: [9], excluded: [] });
+    for (const n of [1, 2, 3, 4, 5]) f = toggleFilter(f, 'fixed', n);
+    expect(f.fixed).toEqual([1, 2, 3, 4, 9]);
+    expect(toggleFilter(f, 'fixed', 9).fixed).toEqual([1, 2, 3, 4]);
+  });
+});
+
+describe('흔들기', () => {
+  it('짧은 시간에 세게 세 번 움직이면 흔든 것', () => {
+    const isShake = makeShakeDetector();
+    const still = { x: 0, y: 0, z: 0 };
+    const hard = { x: 18, y: 0, z: 0 };
+    const feed = (t: number, strong: boolean) => isShake(strong ? hard : still, t);
+    expect(feed(0, true)).toBe(false);
+    expect(feed(100, false)).toBe(false);
+    expect(feed(200, true)).toBe(false);
+    expect(feed(300, false)).toBe(false);
+    expect(feed(400, true)).toBe(true);
+    // 쉬는 시간에는 다시 알아채지 않음
+    expect([500, 600, 700, 800, 900, 1000].map((t, i) => feed(t, i % 2 === 1)).some(Boolean)).toBe(false);
+  });
+
+  it('천천히 기울이거나 한 번 툭 친 것은 아님', () => {
+    const isShake = makeShakeDetector();
+    // 중력이 섞인 값이 천천히 돌아감 (기울이기)
+    let any = false;
+    for (let i = 0; i < 200; i++) {
+      const a = (i / 200) * Math.PI;
+      any = isShake({ x: 9.8 * Math.sin(a), y: 9.8 * Math.cos(a), z: 0 }, i * 16, true) || any;
+    }
+    expect(any).toBe(false);
+    expect(isShake({ x: 30, y: 0, z: 0 }, 5000)).toBe(false);
+    expect(isShake({ x: 0, y: 0, z: 0 }, 5100)).toBe(false);
+    // 한참 뒤에 한 번씩은 세지 않음
+    expect(isShake({ x: 30, y: 0, z: 0 }, 7000)).toBe(false);
+    expect(isShake({ x: 0, y: 0, z: 0 }, 7100)).toBe(false);
+    expect(isShake({ x: 30, y: 0, z: 0 }, 9000)).toBe(false);
+  });
+});
+
+describe('내 번호 성적표', () => {
+  it('추첨이 끝난 번호만 맞춰 보고 등수를 센다', () => {
+    const draw = { no: 100, date: '2026-01-03', nums: [1, 2, 3, 4, 5, 6], bonus: 7 };
+    const set = (drawNo: number, numbers: number[]) => ({ method: 'machine' as const, title: '', emoji: '', numbers, reasons: {}, id: `${drawNo}-${numbers.join()}`, drawNo, createdAt: '' });
+    const sc = scoreboard([set(100, [1, 2, 3, 10, 11, 12]), set(100, [1, 2, 3, 4, 11, 12]), set(100, [1, 2, 20, 21, 22, 23]), set(101, [1, 2, 3, 4, 5, 6])], [draw]);
+    expect(sc).toEqual({ total: 4, checked: 3, wins: { 5: 1, 4: 1 }, winCount: 2, bestRank: 4, bestHits: 4 });
+    expect(scoreboard([], [draw])).toMatchObject({ total: 0, checked: 0, winCount: 0, bestHits: 0 });
   });
 });

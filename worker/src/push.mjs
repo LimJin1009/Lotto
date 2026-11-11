@@ -5,6 +5,7 @@
 // - 알림에는 내용을 싣지 않는다(암호화 없이 보내려고). 알림을 받은 휴대폰의 서비스 워커가
 //   /api/push/inbox 로 와서 문구를 가져가 보여 준다.
 // - 보낸 회차의 번호는 지운다. 받는 곳이 없어진 기기(404·410)는 지운다.
+// - 구매 알림: 받겠다고 한 기기에는 토요일 18시(한국)에 "오늘 20시 판매 마감" 을 알린다.
 import { allowHit, getDraw, rankOf, readJson, sha256, UserError } from './reviews.mjs';
 
 const SITE = 'https://limjin1009.github.io/Lotto/';
@@ -76,8 +77,15 @@ export async function syncSubscription(db, input, now = new Date()) {
   const id = await sha256(endpoint);
   const at = now.toISOString();
   const done = new Set(((await db.prepare('SELECT round FROM push_rounds').all()).results ?? []).map((r) => r.round));
+  // 구매 알림을 받을지. 값을 안 보낸 (예전) 앱이면 지금 설정을 그대로 둔다
+  const remind = typeof input?.remind === 'boolean' ? Number(input.remind) : null;
   const stmts = [
-    db.prepare('INSERT INTO subs (id, endpoint, created_at, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at').bind(id, endpoint, at, at),
+    db
+      .prepare(
+        `INSERT INTO subs (id, endpoint, created_at, updated_at, remind) VALUES (?, ?, ?, ?, COALESCE(?, 0))
+         ON CONFLICT(id) DO UPDATE SET updated_at = excluded.updated_at, remind = COALESCE(?, subs.remind)`,
+      )
+      .bind(id, endpoint, at, at, remind, remind),
     db.prepare('DELETE FROM watch WHERE sub_id = ?').bind(id),
     // 이미 알림을 끝낸 회차는 받지 않는다
     ...sets.filter((s) => !done.has(s.round)).map((s) => db.prepare('INSERT OR IGNORE INTO watch (sub_id, round, nums) VALUES (?, ?, ?)').bind(id, s.round, s.nums)),
@@ -109,6 +117,59 @@ export function winMessage(round, rank) {
     body: '이 번호로 복권을 샀다면, QR로 당첨을 확인하고 당첨 후기를 남겨 주세요.',
     url: '#/check',
   };
+}
+
+export function buyReminderMessage() {
+  return {
+    title: '🎱 오늘 저녁 8시에 로또 판매가 끝나요',
+    body: '이번 주 번호는 정하셨나요? 눌러서 번호를 뽑아 보세요.',
+    url: '#/',
+  };
+}
+
+/** 당첨 알림이 아닌 안내를 알림함에 넣는다. 아직 못 보낸 당첨 알림은 덮어쓰지 않는다 */
+function putNotice(db, subId, m, at) {
+  return db
+    .prepare(
+      `INSERT INTO inbox (sub_id, round, title, body, url, created_at, sent, tries) VALUES (?, 0, ?, ?, ?, ?, 1, 0)
+       ON CONFLICT(sub_id) DO UPDATE SET round = 0, title = excluded.title, body = excluded.body, url = excluded.url, created_at = excluded.created_at
+       WHERE inbox.sent = 1`,
+    )
+    .bind(subId, m.title, m.body, m.url, at)
+    .run();
+}
+
+/**
+ * 구매 알림: 토요일 18시대(한국)에만 일한다. 받겠다고 한 기기에 하루 한 번, 한 번 실행에 SEND_PER_RUN 개까지.
+ */
+export async function runBuyReminder(env, { fetchImpl = fetch, now = new Date() } = {}) {
+  const db = env.DB;
+  const report = { sent: 0, gone: 0, failed: 0 };
+  const kst = new Date(now.getTime() + 9 * 3600_000);
+  if (kst.getUTCDay() !== 6 || kst.getUTCHours() !== 18) return report;
+  const today = kst.toISOString().slice(0, 10);
+  const { results: subs } = await db
+    .prepare('SELECT id, endpoint FROM subs WHERE remind = 1 AND (reminded_on IS NULL OR reminded_on <> ?) ORDER BY updated_at LIMIT ?')
+    .bind(today, SEND_PER_RUN)
+    .all();
+  const m = buyReminderMessage();
+  for (const s of subs) {
+    await putNotice(db, s.id, m, now.toISOString());
+    // 실패해도 오늘은 다시 보내지 않는다 (다음 주에 다시)
+    await db.prepare('UPDATE subs SET reminded_on = ? WHERE id = ?').bind(today, s.id).run();
+    let status = 0;
+    try {
+      status = await sendPush(s.endpoint, env, fetchImpl);
+    } catch {
+      status = 0;
+    }
+    if (status >= 200 && status < 300) report.sent++;
+    else if (status === 404 || status === 410) {
+      await removeSubscription(db, s.endpoint);
+      report.gone++;
+    } else report.failed++;
+  }
+  return report;
 }
 
 /**

@@ -40,8 +40,15 @@ CREATE TABLE IF NOT EXISTS subs (
   id TEXT PRIMARY KEY,
   endpoint TEXT NOT NULL,
   created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL
+  updated_at TEXT NOT NULL,
+  -- 구매 알림(토요일 18시 "오늘 판매 마감")을 받겠다고 한 기기는 1
+  remind INTEGER NOT NULL DEFAULT 0,
+  -- 구매 알림을 마지막으로 보낸 날 (YYYY-MM-DD, 한국 날짜). 같은 날 두 번 안 보내려고
+  reminded_on TEXT
 );
+-- 이미 만들어 둔 DB 에는 한 번만:
+--   ALTER TABLE subs ADD COLUMN remind INTEGER NOT NULL DEFAULT 0;
+--   ALTER TABLE subs ADD COLUMN reminded_on TEXT;
 
 -- 추첨 전 회차에 저장해 둔 번호 (그 회차 알림을 보내고 나면 지움)
 CREATE TABLE IF NOT EXISTS watch (

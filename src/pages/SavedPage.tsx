@@ -3,6 +3,7 @@ import { BallRow } from '../components/Ball';
 import { PushCard } from '../components/PushCard';
 import { share } from '../components/ResultCard';
 import { drawTime, formatDate, rankOf } from '../lib/draws';
+import { scoreboard } from '../lib/saved';
 import { METHOD_LABEL, type SavedSet } from '../lib/types';
 
 function SavedItem({ s }: { s: SavedSet }) {
@@ -55,6 +56,52 @@ function SavedItem({ s }: { s: SavedSet }) {
   );
 }
 
+/** 내 번호 성적표: 지금까지 저장한 번호를 맞춰 본 기록 */
+function ScoreCard() {
+  const { saved, draws } = useApp();
+  const sc = scoreboard(saved, draws);
+  const ranks = [1, 2, 3, 4, 5].filter((r) => sc.wins[r]);
+  return (
+    <section className="card score-card">
+      <h2>📊 내 번호 성적표</h2>
+      <dl className="score-grid">
+        <div>
+          <dt>저장한 번호</dt>
+          <dd>
+            {sc.total}
+            <small>게임</small>
+          </dd>
+        </div>
+        <div>
+          <dt>추첨 끝남</dt>
+          <dd>
+            {sc.checked}
+            <small>게임</small>
+          </dd>
+        </div>
+        <div className={sc.winCount ? 'score-win' : undefined}>
+          <dt>5등 이상</dt>
+          <dd>
+            {sc.winCount}
+            <small>번</small>
+          </dd>
+        </div>
+        <div>
+          <dt>최고 기록</dt>
+          <dd>
+            {sc.checked ? sc.bestHits : '-'}
+            <small>{sc.checked ? '개 맞음' : ''}</small>
+          </dd>
+        </div>
+      </dl>
+      {ranks.length > 0 && <p className="score-ranks">🎉 {ranks.map((r) => `${r}등 ${sc.wins[r]}번`).join(' · ')}</p>}
+      <p className="score-note">
+        {sc.checked === 0 ? '아직 추첨이 끝난 번호가 없어요. 토요일 추첨이 끝나면 채워져요.' : '번호함에 있는 번호를 맞춰 본 기록이에요. 실제로 산 복권과는 다를 수 있어요.'}
+      </p>
+    </section>
+  );
+}
+
 export function SavedPage() {
   const { saved, draws, latest } = useApp();
   const rounds = [...new Set(saved.map((s) => s.drawNo))].sort((a, b) => b - a);
@@ -67,6 +114,8 @@ export function SavedPage() {
       </div>
 
       <PushCard />
+
+      {saved.length > 0 && <ScoreCard />}
 
       {saved.length === 0 && (
         <div className="card empty">

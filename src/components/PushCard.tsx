@@ -4,7 +4,7 @@ import { usePush } from '../lib/push';
 /** 당첨 알림 켜기·끄기. compact 면 꺼져 있을 때만 짧게 보인다 */
 export function PushCard({ compact = false }: { compact?: boolean }) {
   const { saved, latest } = useApp();
-  const { state, busy, error, turnOn, turnOff } = usePush(saved, latest.no);
+  const { state, busy, error, turnOn, turnOff, remind, setRemind } = usePush(saved, latest.no);
 
   if (state === 'checking') return null;
   if (compact && state !== 'off') return null;
@@ -31,6 +31,13 @@ export function PushCard({ compact = false }: { compact?: boolean }) {
             </button>
           </div>
           <p>추첨이 끝나면 저장한 번호를 맞춰 보고, 5등 이상이면 휴대폰으로 알려 드려요.</p>
+          <label className="push-remind">
+            <input type="checkbox" checked={remind} disabled={busy} onChange={(e) => setRemind(e.target.checked)} />
+            <span>
+              <b>구매 알림도 받기</b>
+              토요일 오후 6시에 "오늘 저녁 8시 판매 마감"을 알려 드려요.
+            </span>
+          </label>
         </>
       ) : state === 'off' ? (
         <>
