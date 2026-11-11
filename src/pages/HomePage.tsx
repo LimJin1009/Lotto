@@ -297,7 +297,7 @@ export function HomePage() {
             </button>
           ))}
         </div>
-        {mode === 'random' && <p className="opt-q">아무것도 넣지 않고 추첨기가 공 6개를 자동으로 뽑아요.</p>}
+        {mode === 'random' && <p className="opt-q">"자동으로 1장 주세요"</p>}
         {mode === 'dream' && <DreamOptions value={dream} onChange={setDream} />}
         {mode === 'personal' && <PersonalOptions value={personal} onChange={setPersonal} />}
         {mode === 'wish' && <WishOptions value={wish} onChange={setWish} />}
