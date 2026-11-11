@@ -99,6 +99,12 @@ function ResultSlip({ list }: { list: GenResult[] }) {
     }
   };
 
+  // 모두 저장하면 맨 위 첫 화면으로 돌아간다
+  const saveAll = () => {
+    unsaved.forEach((r) => save(r));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <article className="card result-card slip">
       <ol className="slip-rows">
@@ -150,7 +156,7 @@ function ResultSlip({ list }: { list: GenResult[] }) {
       </ol>
       <p className="slip-hint">줄을 누르면 번호가 나온 이유를 볼 수 있어요. + 는 한 게임만 저장.</p>
       <div className="result-actions">
-        <button type="button" className="btn btn-primary" disabled={unsaved.length === 0} onClick={() => unsaved.forEach((r) => save(r))}>
+        <button type="button" className="btn btn-primary" disabled={unsaved.length === 0} onClick={saveAll}>
           {unsaved.length === 0 ? '✓ 모두 번호함에 있음' : `${round}회 번호함에 ${unsaved.length === list.length ? '모두' : `${unsaved.length}게임`} 저장`}
         </button>
         <button type="button" className="btn" onClick={shareAll}>
