@@ -9,10 +9,15 @@ function openInChrome() {
   location.href = `intent://${url}#Intent;scheme=https;package=com.android.chrome;end`;
 }
 
+function openInSafari() {
+  // 아이폰 카카오톡 안에서 Safari(기본 브라우저)로 열기
+  location.href = `kakaotalk://web/openExternal?url=${encodeURIComponent(location.href)}`;
+}
+
 const STEPS: Record<Exclude<Platform, 'installed'>, { title: string; steps: string[] }> = {
   kakao: {
     title: '카카오톡 안에서는 설치가 안 돼요',
-    steps: ['오른쪽 아래(또는 위) ⋮ 메뉴를 눌러요', '"다른 브라우저로 열기"를 눌러요', '열린 브라우저에서 다시 "앱 설치"를 눌러요'],
+    steps: ['아래 버튼으로 Chrome이나 Safari에서 열어요', '열린 브라우저에서 다시 "앱 설치"를 눌러요', '버튼이 안 되면 화면의 ⋮ 메뉴에서 "다른 브라우저로 열기"를 눌러요'],
   },
   inapp: {
     title: '이 앱 안의 브라우저에서는 설치가 안 돼요',
@@ -91,6 +96,11 @@ export function InstallButton() {
               {platform === 'kakao' && /Android/i.test(navigator.userAgent) && (
                 <button type="button" className="btn btn-primary" onClick={openInChrome}>
                   Chrome으로 열기
+                </button>
+              )}
+              {platform === 'kakao' && /iPhone|iPad|iPod/i.test(navigator.userAgent) && (
+                <button type="button" className="btn btn-primary" onClick={openInSafari}>
+                  Safari로 열기
                 </button>
               )}
               {(platform === 'ios-other' || platform === 'kakao' || platform === 'inapp' || platform === 'desktop') && (
