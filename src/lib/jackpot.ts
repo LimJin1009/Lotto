@@ -72,25 +72,43 @@ export function jackpotNumbers(draws: Draw[]): GenResult {
 const KEY = 'lotto.jackpot.open';
 const EVENT = 'lotto:jackpot';
 
-/** 응원하기를 눌러 대박번호를 열었는지 (이 기기에만 기억) */
+// 저장을 못 하는 브라우저에서도 이번 화면에서는 열리도록 따로 기억한다
+let opened: boolean | null = null;
+
+/** 응원하기를 눌러 대박번호를 열었는지 (이 기기에만 기억). 10게임을 받으면 다시 잠긴다 */
 export function isJackpotOpen(): boolean {
-  try {
-    return localStorage.getItem(KEY) === '1';
-  } catch {
-    return false;
+  if (opened === null) {
+    try {
+      opened = localStorage.getItem(KEY) === '1';
+    } catch {
+      opened = false;
+    }
   }
+  return opened;
 }
 
-/** 응원하기(카카오페이)를 누르면 부른다. 실제로 보냈는지는 확인하지 않는다 */
-export function openJackpot(): void {
+function setOpen(v: boolean): void {
+  opened = v;
   try {
-    localStorage.setItem(KEY, '1');
+    if (v) localStorage.setItem(KEY, '1');
+    else localStorage.removeItem(KEY);
   } catch {
-    /* 저장 못 하면 이번에만 열림 */
+    /* 저장 못 하면 이번에만 */
   }
   window.dispatchEvent(new Event(EVENT));
 }
 
+/** 응원하기(카카오페이)를 누르면 부른다. 실제로 보냈는지는 확인하지 않는다 */
+export function openJackpot(): void {
+  setOpen(true);
+}
+
+/** 10게임을 받으면 부른다. 다시 응원해야 열린다 */
+export function closeJackpot(): void {
+  setOpen(false);
+}
+
+/** 열리거나 잠길 때마다 부른다 */
 export function onJackpotOpen(fn: () => void): () => void {
   window.addEventListener(EVENT, fn);
   return () => window.removeEventListener(EVENT, fn);

@@ -11,7 +11,7 @@ import { WishOptions } from '../components/options/WishOptions';
 import { pushResult, ResultList } from '../components/ResultCard';
 import { DREAMS, dreamNumbers } from '../lib/dream';
 import { drawTime, formatDate, rankOf } from '../lib/draws';
-import { isJackpotOpen, JACKPOT_GAMES, jackpotNumbers, jackpotPool, onJackpotOpen } from '../lib/jackpot';
+import { closeJackpot, isJackpotOpen, JACKPOT_GAMES, jackpotNumbers, jackpotPool, onJackpotOpen } from '../lib/jackpot';
 import { extractPicks, personalNumbers, type PersonalInput } from '../lib/personal';
 import { applyFilter, loadFilter, saveFilter, type PickFilter } from '../lib/picks';
 import { randInt, randomNumbers } from '../lib/random';
@@ -161,9 +161,10 @@ export function HomePage() {
     setFilterState(f);
     saveFilter(f);
   };
-  // 대박번호는 개발자 응원하기를 누르면 열린다
+  // 대박번호는 개발자 응원하기를 누르면 열리고, 10게임을 받으면 다시 잠긴다
   const [jackpotOpen, setJackpotOpen] = useState(isJackpotOpen);
-  useEffect(() => onJackpotOpen(() => setJackpotOpen(true)), []);
+  useEffect(() => onJackpotOpen(() => setJackpotOpen(isJackpotOpen())), []);
+  const [jackpotUses, setJackpotUses] = useState(0);
 
   const api = useRef<MachineApi | null>(null);
   const machineBox = useRef<HTMLElement>(null);
@@ -213,6 +214,10 @@ export function HomePage() {
     // 번호는 추첨 전에 이미 정해 둔다. 추첨기는 그 공을 꺼내는 모습을 보여줄 뿐이다.
     const list = Array.from({ length: count }, (_, g) => (jackpot ? build(g) : applyFilter(build(g), filter)));
     batch.current = { list, done: 0 };
+    if (jackpot) {
+      closeJackpot();
+      setJackpotUses((n) => n + 1);
+    }
     setRunning(true);
     machineBox.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -285,7 +290,7 @@ export function HomePage() {
           </strong>
           <span>개발자가 공들여 고른 번호 10게임</span>
         </button>
-        {jackpot && <JackpotOptions open={jackpotOpen} pairs={jackpotPool(draws).pairs} />}
+        {jackpot && <JackpotOptions open={jackpotOpen} uses={jackpotUses} pairs={jackpotPool(draws).pairs} />}
         <h2>어떤 방식으로 뽑을까요?</h2>
         <div className="modes" role="tablist">
           {MODES.map((m) => (

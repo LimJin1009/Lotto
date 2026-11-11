@@ -1025,20 +1025,20 @@ h2 small {
   opacity: 0.82;
 }
 
-/* 빛이 한 번씩 훑고 지나간다 */
+/* 빛이 쉬지 않고 훑고 지나간다 */
 .jackpot-cta::after {
   content: '';
   position: absolute;
   inset: 0;
   background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.6) 50%, transparent 65%);
   transform: translateX(-100%);
-  animation: jackpot-shine 3.2s ease-in-out infinite;
+  animation: jackpot-shine 1.5s ease-in-out infinite;
   pointer-events: none;
 }
 
 @keyframes jackpot-shine {
   0%,
-  55% {
+  12% {
     transform: translateX(-100%);
   }
   100% {
