@@ -1035,6 +1035,22 @@ h2 small {
   height: auto !important;
 }
 
+.tilt-hint {
+  margin: -8px 0 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+.tilt-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #fff;
+  cursor: pointer;
+}
+
 .tray {
   display: flex;
   gap: 5px;

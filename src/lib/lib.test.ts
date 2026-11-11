@@ -4,9 +4,34 @@ import { DREAMS, dreamNumbers } from './dream';
 import { extractPicks, personalNumbers } from './personal';
 import { gaps, isBalanced, statsNumbers } from './stats';
 import type { GenResult } from './types';
-import { C, R, BR, extractBall, makeWorld, stepWorld } from './machine';
+import { C, R, BR, extractBall, makeWorld, stepWorld, tiltGravity } from './machine';
 
 describe('추첨기', () => {
+  it('휴대폰 기울기로 화면 속 아래 방향을 구한다', () => {
+    const near = (g: { x: number; y: number } | null, x: number, y: number) => {
+      expect(g).not.toBeNull();
+      expect(g!.x).toBeCloseTo(x, 2);
+      expect(g!.y).toBeCloseTo(y, 2);
+    };
+    near(tiltGravity(90, 0), 0, 1); // 똑바로 세움 → 아래
+    near(tiltGravity(0, 60), 1, 0); // 눕혀서 오른쪽을 내림 → 오른쪽
+    near(tiltGravity(0, -60), -1, 0); // 왼쪽을 내림 → 왼쪽
+    near(tiltGravity(-60, 0), 0, -1); // 위쪽을 내림 → 위
+    near(tiltGravity(90, 0, 90), 1, 0); // 가로 화면으로 돌림
+    expect(tiltGravity(1, 1)).toBeNull(); // 거의 평평하면 모름
+  });
+
+  it('오른쪽으로 기울이면 공이 오른쪽에 쌓인다', () => {
+    const w = makeWorld();
+    w.tx = 1;
+    w.ty = 0;
+    let t = 0;
+    for (let s = 0; s < 240; s++) stepWorld(w, (t += 1000 / 60));
+    const avgX = w.balls.reduce((a, b) => a + b.x, 0) / w.balls.length;
+    expect(avgX).toBeGreaterThan(C + R * 0.3);
+    for (const b of w.balls) expect(Math.hypot(b.x - C, b.y - C)).toBeLessThan(R - BR + 1);
+  });
+
   it('바람을 켜면 공이 통 전체로 날아다니고 밖으로 안 나간다', () => {
     const w = makeWorld();
     w.mixing = true;

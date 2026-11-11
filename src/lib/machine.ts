@@ -36,6 +36,12 @@ export interface World {
   mixing: boolean;
   /** 빨리 감기: 공이 더 빨리 빠져나감 */
   fast: boolean;
+  /** 지금 중력 방향 (화면 기준, 길이 1). 기본은 아래 (0, 1) */
+  gx: number;
+  gy: number;
+  /** 휴대폰 기울기로 정한 목표 중력 방향. 지금 방향이 이쪽으로 부드럽게 따라감 */
+  tx: number;
+  ty: number;
 }
 
 export function makeWorld(): World {
@@ -45,10 +51,30 @@ export function makeWorld(): World {
     const col = (n - 1) % 9;
     balls.push({ n, x: C - 100 + col * 25 + (row % 2) * 12, y: C + 110 - row * 23, vx: 0, vy: 0 });
   }
-  return { balls, air: 0, mixing: false, fast: false };
+  return { balls, air: 0, mixing: false, fast: false, gx: 0, gy: 1, tx: 0, ty: 1 };
 }
 
 const GRAVITY = 0.32;
+
+/**
+ * 휴대폰 기울기(deviceorientation 의 beta·gamma, 도)와 화면 회전 각도로
+ * 화면 안에서 "아래"가 어느 쪽인지 구한다. 화면 기준 x 오른쪽·y 아래, 길이 1.
+ * 휴대폰을 거의 평평하게 눕혀 방향을 알 수 없으면 null.
+ */
+export function tiltGravity(beta: number, gamma: number, screenAngle = 0): { x: number; y: number } | null {
+  const rad = Math.PI / 180;
+  // 지구 중력을 휴대폰 화면 평면에 비춘 것 (세로 화면 기준)
+  let x = Math.cos(beta * rad) * Math.sin(gamma * rad);
+  let y = Math.sin(beta * rad);
+  // 가로 화면이면 그만큼 돌려 준다
+  const a = (((screenAngle % 360) + 360) % 360) as number;
+  if (a === 90) [x, y] = [y, -x];
+  else if (a === 180) [x, y] = [-x, -y];
+  else if (a === 270) [x, y] = [-y, x];
+  const len = Math.hypot(x, y);
+  if (len < 0.12) return null;
+  return { x: x / len, y: y / len };
+}
 const MAX_SPEED = 11;
 const JET_WIDTH = 46;
 
@@ -57,10 +83,17 @@ export function stepWorld(w: World, now: number, rand: () => number = Math.rando
   w.air += ((w.mixing ? 1 : 0) - w.air) * 0.04;
   const air = w.air;
   const list = w.balls;
+  // 중력 방향은 휴대폰 기울기를 부드럽게 따라감
+  w.gx += (w.tx - w.gx) * 0.12;
+  w.gy += (w.ty - w.gy) * 0.12;
+  const gl = Math.hypot(w.gx, w.gy) || 1;
+  const gx = (w.gx / gl) * GRAVITY;
+  const gy = (w.gy / gl) * GRAVITY;
 
   for (const b of list) {
     if (b.out) continue;
-    b.vy += GRAVITY;
+    b.vx += gx;
+    b.vy += gy;
     if (air > 0.01) {
       const dx = b.x - C;
       const below = (b.y - C) / R; // -1(위) ~ 1(아래)

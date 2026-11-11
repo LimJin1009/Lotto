@@ -1,5 +1,6 @@
 // 공기식 추첨기 그리기. 번호는 밖에서 먼저 정하고, 여기서는 그 공을 꺼내는 모습만 보여준다.
 import { useEffect, useRef } from 'react';
+import { useTilt } from '../lib/tilt';
 import { BR, C, extractBall, makeWorld, R, SIZE, stepWorld, type PBall } from '../lib/machine';
 import { ballColor, ballPalette } from './Ball';
 
@@ -91,6 +92,11 @@ export interface MachineApi {
 export function DrawMachine({ apiRef }: { apiRef: React.RefObject<MachineApi | null> }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const world = useRef(makeWorld());
+  // 휴대폰을 기울이면 공이 그쪽으로 떨어짐
+  const tilt = useTilt((g) => {
+    world.current.tx = g.x;
+    world.current.ty = g.y;
+  });
 
   useEffect(() => {
     apiRef.current = {
@@ -102,7 +108,8 @@ export function DrawMachine({ apiRef }: { apiRef: React.RefObject<MachineApi | n
       },
       extract: (n) => extractBall(world.current, n, performance.now()),
       reset: () => {
-        world.current = makeWorld();
+        const { tx, ty } = world.current;
+        world.current = { ...makeWorld(), tx, ty, gx: tx, gy: ty };
       },
     };
   }, [apiRef]);
@@ -228,5 +235,15 @@ export function DrawMachine({ apiRef }: { apiRef: React.RefObject<MachineApi | n
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  return <canvas ref={canvas} className="machine-canvas" style={{ width: SIZE, height: SIZE }} role="img" aria-label="로또 추첨기" />;
+  return (
+    <>
+      <canvas ref={canvas} className="machine-canvas" style={{ width: SIZE, height: SIZE }} role="img" aria-label="로또 추첨기" />
+      {tilt.state === 'on' && tilt.live && <p className="tilt-hint">📱 휴대폰을 기울이면 공이 굴러가요</p>}
+      {tilt.state === 'need-permission' && navigator.maxTouchPoints > 0 && (
+        <button type="button" className="tilt-hint tilt-btn" onClick={tilt.enable}>
+          📱 휴대폰을 기울여 공 굴리기 켜기
+        </button>
+      )}
+    </>
+  );
 }
