@@ -6,7 +6,7 @@ export function JackpotOptions({ open, pairs }: { open: boolean; pairs: number }
   return (
     <div className="jackpot">
       <p className="jackpot-pitch">
-        개발자가 역대 1등 번호를 1회부터 전부 뒤져서 직접 조합한 <b>강력한 번호</b>예요. 아무에게나 드리지 않아요. 응원해 주신 분께만 {JACKPOT_GAMES}게임을 선별해 드려요.
+        개발자가 역대 1등 번호를 1회부터 전부 뒤져서 <b>공들여 고른 번호</b>예요. 아무에게나 드리지 않아요. 응원해 주신 분께만 {JACKPOT_GAMES}게임을 선별해 드려요.
       </p>
       {open ? (
         <p className="jackpot-open">💛 응원해 주셔서 고마워요! 선별한 대박번호 {JACKPOT_GAMES}게임, 아래 추첨 버튼으로 받아 가세요.</p>

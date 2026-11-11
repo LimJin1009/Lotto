@@ -283,7 +283,7 @@ export function HomePage() {
           <strong>
             <span aria-hidden>💰</span> 대박번호 받기 {!jackpotOpen && <span aria-label="잠김">🔒</span>}
           </strong>
-          <span>개발자가 직접 조합한 강력한 번호 10게임</span>
+          <span>개발자가 공들여 고른 번호 10게임</span>
         </button>
         {jackpot && <JackpotOptions open={jackpotOpen} pairs={jackpotPool(draws).pairs} />}
         <h2>어떤 방식으로 뽑을까요?</h2>
