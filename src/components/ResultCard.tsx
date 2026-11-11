@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { useApp } from '../app-context';
 import { METHOD_LABEL, type GenResult } from '../lib/types';
 import { isSameSet } from '../lib/saved';
+import { JACKPOT_GAMES } from '../lib/jackpot';
 import { Ball, BallRow } from './Ball';
 import { PushCard } from './PushCard';
 
@@ -161,18 +162,21 @@ function ResultSlip({ list }: { list: GenResult[] }) {
 }
 
 /** 생성 화면 공통: 결과 목록 (최대 5게임). 한 게임이면 큰 카드, 여러 게임이면 용지 한 장 */
-export function ResultList({ results, onClear }: { results: GenResult[]; onClear: () => void }) {
+export function ResultList({ results, onClear, boxRef }: { results: GenResult[]; onClear: () => void; boxRef?: Ref<HTMLElement> }) {
   if (results.length === 0) return null;
+  // 대박번호로 받은 10게임이면 제목을 바꾸고 당첨 기원 글을 붙인다
+  const jackpot = results.length === JACKPOT_GAMES && results.every((r) => r.method === 'jackpot');
   // results 는 최신이 앞이므로, 용지에는 먼저 뽑은 것부터 A, B, C… 순서로
   const list = [...results].reverse();
   return (
-    <section className="results">
+    <section className="results" ref={boxRef}>
       <div className="results-bar">
-        <span>만든 번호 {results.length}게임</span>
+        <span>{jackpot ? `💰 대박번호 ${JACKPOT_GAMES}게임` : `만든 번호 ${results.length}게임`}</span>
         <button type="button" className="link-btn muted" onClick={onClear}>
           지우기
         </button>
       </div>
+      {jackpot && <p className="results-wish">당첨을 기원합니다 🙏 🤗 🙌</p>}
       {list.length === 1 ? <ResultCard result={list[0]} /> : <ResultSlip list={list} />}
       <PushCard compact />
     </section>

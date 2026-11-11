@@ -155,6 +155,13 @@ export function HomePage() {
   const [drawn, setDrawn] = useState<number[]>([]);
   const [results, setResults] = useState<GenResult[]>([]);
 
+  // 대박번호 10게임을 다 받으면 결과 용지로 화면을 맞춘다 (1게임 추첨은 그대로 둔다)
+  const resultsBox = useRef<HTMLElement>(null);
+  const [jackpotDone, setJackpotDone] = useState(0);
+  useEffect(() => {
+    if (jackpotDone) resultsBox.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [jackpotDone]);
+
   useEffect(
     () => () => {
       run.current++; // 화면을 떠나면 진행 중인 추첨을 멈춤
@@ -192,6 +199,7 @@ export function HomePage() {
     // 번호는 추첨 전에 이미 정해 둔다. 추첨기는 그 공을 꺼내는 모습을 보여줄 뿐이다.
     const list = Array.from({ length: count }, (_, g) => (jackpot ? build(g) : applyFilter(build(g), filter)));
     batch.current = { list, done: 0 };
+    const r0 = list[0];
     if (jackpot) {
       closeJackpot();
       setJackpotUses((n) => n + 1);
@@ -225,6 +233,7 @@ export function HomePage() {
       }
     }
     setRunning(false);
+    if (r0?.method === 'jackpot') setJackpotDone((n) => n + 1);
   };
 
   // 휴대폰을 흔들면 추첨 시작 (추첨 중이거나 입력이 덜 됐으면 아무 일도 없음)
@@ -249,6 +258,7 @@ export function HomePage() {
     api.current?.reset();
     api.current?.setMixing(false);
     setRunning(false);
+    if (last?.method === 'jackpot') setJackpotDone((n) => n + 1);
   };
 
   return (
@@ -330,7 +340,7 @@ export function HomePage() {
         )}
       </section>
 
-      <ResultList results={results} onClear={() => setResults([])} />
+      <ResultList results={results} onClear={() => setResults([])} boxRef={resultsBox} />
 
       <LatestDraw latest={latest} />
 

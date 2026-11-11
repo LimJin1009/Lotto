@@ -746,6 +746,16 @@ h2 small {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  scroll-margin-top: 70px;
+}
+
+/* 대박번호 10게임을 받았을 때 용지 위에 붙는 당첨 기원 글 */
+.results-wish {
+  margin: 0;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--gold);
 }
 
 .results-bar {
