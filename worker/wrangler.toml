@@ -1,4 +1,4 @@
-# 로또 찐 번호 후기 서버 (Cloudflare Workers + D1)
+# 로또 찐 명당 후기 서버 (Cloudflare Workers + D1)
 # 올리는 법·관리: docs/후기서버.md
 name = "lotto-reviews"
 main = "src/index.mjs"

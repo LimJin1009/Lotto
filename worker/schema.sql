@@ -1,4 +1,4 @@
--- 로또 찐 번호 후기 서버 (Cloudflare D1) 표 만들기
+-- 로또 찐 명당 후기 서버 (Cloudflare D1) 표 만들기
 -- 처음 한 번: npx wrangler d1 execute lotto-reviews --remote --file worker/schema.sql
 
 CREATE TABLE IF NOT EXISTS draws (

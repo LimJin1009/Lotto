@@ -1,4 +1,4 @@
-// 로또 찐 번호 서버의 HTTP 처리: 후기(reviews.mjs) + 당첨 알림(push.mjs)
+// 로또 찐 명당 서버의 HTTP 처리: 후기(reviews.mjs) + 당첨 알림(push.mjs)
 //
 // API
 //   GET  /health

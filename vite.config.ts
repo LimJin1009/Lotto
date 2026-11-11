@@ -11,7 +11,7 @@ function seoPages(): Plugin {
       const jsonLd = {
         '@context': 'https://schema.org',
         '@type': 'WebApplication',
-        name: '로또 찐 번호',
+        name: '로또 찐 명당',
         url: SITE,
         applicationCategory: 'EntertainmentApplication',
         operatingSystem: 'Android, iOS, Windows, macOS',

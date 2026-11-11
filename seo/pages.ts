@@ -80,7 +80,7 @@ function layout(o: { title: string; description: string; path: string; root: str
 <link rel="icon" href="${o.root}favicon.svg" type="image/svg+xml" />
 <link rel="apple-touch-icon" href="${o.root}apple-touch-icon.png" />
 <meta property="og:type" content="article" />
-<meta property="og:site_name" content="로또 찐 번호" />
+<meta property="og:site_name" content="로또 찐 명당" />
 <meta property="og:locale" content="ko_KR" />
 <meta property="og:url" content="${url}" />
 <meta property="og:title" content="${esc(o.title)}" />
@@ -93,7 +93,7 @@ ${o.jsonLd.map((j) => `<script type="application/ld+json">${JSON.stringify(j)}</
 </head>
 <body>
 <div class="wrap">
-<a class="top" href="${o.root}"><img src="${o.root}icon-192.png" alt="" />로또 찐 번호</a>
+<a class="top" href="${o.root}"><img src="${o.root}icon-192.png" alt="" />로또 찐 명당</a>
 ${o.body}
 <p class="foot">해몽과 숫자는 이 사이트가 정한 재미용 해석이에요. 어떤 번호를 골라도 1등 당첨 확률은 8,145,060분의 1로 같습니다.<br />정확한 당첨번호는 동행복권(dhlottery.co.kr)에서 확인하세요.</p>
 </div>
@@ -106,7 +106,7 @@ export function dreamPage(d: Dream): string {
   const root = '../../';
   const nums = d.nums.join(', ');
   const sitNums = d.situations.map((s) => s.num).join(', ');
-  const title = `${d.name} 로또 번호 — ${d.name} 해몽과 행운 숫자 | 로또 찐 번호`;
+  const title = `${d.name} 로또 번호 — ${d.name} 해몽과 행운 숫자 | 로또 찐 명당`;
   const description = `${d.name} 해몽: ${d.meaning}. ${d.name}의 상징 숫자 ${nums}와 상황별 숫자로 추첨기를 돌려 로또 번호를 뽑아 보세요.`;
   const same = DREAMS.filter((x) => x.category === d.category && x.id !== d.id);
   const others = DREAM_CATEGORIES.filter((c) => c !== d.category);
@@ -164,7 +164,7 @@ ${faq.map((f) => `<dt>${esc(f.q)}</dt><dd>${esc(f.a)}</dd>`).join('\n')}
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: '로또 찐 번호', item: SITE },
+          { '@type': 'ListItem', position: 1, name: '로또 찐 명당', item: SITE },
           { '@type': 'ListItem', position: 2, name: '꿈 해몽 번호', item: `${SITE}dream/` },
           { '@type': 'ListItem', position: 3, name: d.name, item: `${SITE}dream/${d.id}/` },
         ],
@@ -204,7 +204,7 @@ ${DREAMS.filter((d) => d.category === c)
 <a class="cta" href="${root}">🎱 추첨기로 번호 뽑으러 가기</a>
 `;
   return layout({
-    title: `꿈 해몽 로또 번호 모음 — ${DREAMS.length}가지 꿈별 행운 숫자 | 로또 찐 번호`,
+    title: `꿈 해몽 로또 번호 모음 — ${DREAMS.length}가지 꿈별 행운 숫자 | 로또 찐 명당`,
     description: `돼지꿈·똥꿈·조상꿈·용꿈 등 ${DREAMS.length}가지 꿈의 해몽과 상황별 행운 숫자. 꿈을 고르면 추첨기로 로또 번호를 뽑아 드려요.`,
     path: 'dream/',
     root,
@@ -224,7 +224,7 @@ ${DREAMS.filter((d) => d.category === c)
 export function homeStaticContent(): string {
   const popular = POPULAR.map((id) => DREAMS.find((d) => d.id === id)!).filter(Boolean);
   return `<div class="seo-static">
-<h1>로또 찐 번호 — 로또 번호 생성기</h1>
+<h1>로또 찐 명당 — 로또 번호 생성기</h1>
 <p>어젯밤 꾼 꿈, 생일·전화번호·차량번호, 1회부터 최신 회차까지의 당첨 통계로 로또 번호를 뽑는 무료 로또 번호 생성기예요. 번호는 공기식 추첨기가 돌면서 하나씩 나오고, 숫자마다 왜 나왔는지 알려 드려요.</p>
 <ul>
 <li><b>꿈 해몽 번호</b> — 돼지꿈, 똥꿈, 조상꿈 등 ${DREAMS.length}가지 꿈의 해몽과 행운 숫자</li>

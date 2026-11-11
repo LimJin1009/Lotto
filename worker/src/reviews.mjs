@@ -1,4 +1,4 @@
-// 로또 찐 번호 — 당첨 인증 후기 서버의 규칙과 처리 (Cloudflare Workers + D1)
+// 로또 찐 명당 — 당첨 인증 후기 서버의 규칙과 처리 (Cloudflare Workers + D1)
 // 진입 파일은 index.mjs (Cloudflare 는 진입 파일이 서버 함수만 내보내야 한다)
 //
 // 규칙

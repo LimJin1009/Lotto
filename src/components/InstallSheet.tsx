@@ -20,7 +20,7 @@ const STEPS: Record<Exclude<Platform, 'installed'>, { title: string; steps: stri
   },
   ios: {
     title: '아이폰은 Safari에서 이렇게 설치해요',
-    steps: ['아래쪽 가운데 공유 버튼(네모에 위 화살표)을 눌러요', '목록을 내려 "홈 화면에 추가"를 눌러요', '오른쪽 위 "추가"를 누르면 홈 화면에 로또 찐 번호 아이콘이 생겨요'],
+    steps: ['아래쪽 가운데 공유 버튼(네모에 위 화살표)을 눌러요', '목록을 내려 "홈 화면에 추가"를 눌러요', '오른쪽 위 "추가"를 누르면 홈 화면에 로또 찐 명당 아이콘이 생겨요'],
   },
   'ios-other': {
     title: '아이폰은 Safari에서 설치할 수 있어요',
@@ -28,7 +28,7 @@ const STEPS: Record<Exclude<Platform, 'installed'>, { title: string; steps: stri
   },
   android: {
     title: '안드로이드는 Chrome에서 이렇게 설치해요',
-    steps: ['오른쪽 위 ⋮ 메뉴를 눌러요', '"앱 설치" 또는 "홈 화면에 추가"를 눌러요', '"설치"를 누르면 홈 화면에 로또 찐 번호 아이콘이 생겨요'],
+    steps: ['오른쪽 위 ⋮ 메뉴를 눌러요', '"앱 설치" 또는 "홈 화면에 추가"를 눌러요', '"설치"를 누르면 홈 화면에 로또 찐 명당 아이콘이 생겨요'],
   },
   desktop: {
     title: '휴대폰에서 열어 설치해 주세요',
@@ -53,7 +53,7 @@ export function InstallButton() {
 
   const click = async () => {
     if (canPrompt) {
-      if (await prompt()) toast('홈 화면에 로또 찐 번호를 설치했어요');
+      if (await prompt()) toast('홈 화면에 로또 찐 명당을 설치했어요');
       return;
     }
     setOpen(true);
