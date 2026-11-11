@@ -294,8 +294,9 @@ export function HomePage() {
           ))}
         </div>
         {running ? (
-          <button type="button" className="btn btn-ghost" onClick={instant}>
-            바로 뽑기 ⚡
+          // 바로 뽑기는 10게임을 기다려야 하는 대박번호에서만 누를 수 있다
+          <button type="button" className="btn btn-ghost" onClick={instant} disabled={!jackpot}>
+            {jackpot ? '바로 뽑기 ⚡' : '추첨 중…'}
           </button>
         ) : (
           <button type="button" className="btn btn-gold btn-big" onClick={start} disabled={!!notReady}>
