@@ -1345,6 +1345,23 @@ h2 small {
   font-size: 13px;
 }
 
+/* 번호함 전체 삭제 */
+.saved-clear {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 4px;
+}
+
+.saved-clear-btn {
+  padding: 8px 14px;
+  font-size: 13.5px;
+  background: transparent;
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--line));
+  color: var(--primary);
+}
+
 /* ── 통계 ── */
 .seg {
   display: inline-flex;

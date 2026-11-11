@@ -41,6 +41,12 @@ export function removeSaved(id: string): SavedSet[] {
   return list;
 }
 
+/** 번호함을 통째로 비운다 */
+export function clearSaved(): SavedSet[] {
+  store([]);
+  return [];
+}
+
 export function isSameSet(a: number[], b: number[]): boolean {
   return a.length === b.length && a.every((n, i) => n === b[i]);
 }

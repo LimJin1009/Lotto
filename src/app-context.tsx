@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { currentRound, fetchNewDraws, localDraws } from './lib/draws';
 import { syncPush } from './lib/push';
-import { addSaved, loadSaved, removeSaved } from './lib/saved';
+import { addSaved, clearSaved, loadSaved, removeSaved } from './lib/saved';
 import type { Draw, GenResult, SavedSet } from './lib/types';
 
 interface AppState {
@@ -14,6 +14,7 @@ interface AppState {
   /** 번호함에 저장. drawNo를 안 주면 이번 회차 */
   save: (r: GenResult, drawNo?: number) => void;
   remove: (id: string) => void;
+  clear: () => void;
   toast: (msg: string) => void;
   toastMsg: string | null;
 }
@@ -70,10 +71,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [round],
   );
   const remove = useCallback((id: string) => setSaved(removeSaved(id)), []);
+  const clear = useCallback(() => setSaved(clearSaved()), []);
 
   const value = useMemo(
-    () => ({ draws, latest, round, now, saved, save, remove, toast: setToastMsg, toastMsg }),
-    [draws, latest, round, now, saved, save, remove, toastMsg],
+    () => ({ draws, latest, round, now, saved, save, remove, clear, toast: setToastMsg, toastMsg }),
+    [draws, latest, round, now, saved, save, remove, clear, toastMsg],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

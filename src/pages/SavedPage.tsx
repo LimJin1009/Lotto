@@ -103,7 +103,7 @@ function ScoreCard() {
 }
 
 export function SavedPage() {
-  const { saved, draws, latest } = useApp();
+  const { saved, draws, latest, clear, toast } = useApp();
   const rounds = [...new Set(saved.map((s) => s.drawNo))].sort((a, b) => b - a);
 
   return (
@@ -116,6 +116,23 @@ export function SavedPage() {
       <PushCard />
 
       {saved.length > 0 && <ScoreCard />}
+
+      {saved.length > 0 && (
+        <div className="saved-clear">
+          <span className="muted-text">모두 {saved.length}게임</span>
+          <button
+            type="button"
+            className="btn saved-clear-btn"
+            onClick={() => {
+              if (!confirm(`번호함에 있는 ${saved.length}게임을 모두 지울까요?\n지우면 되돌릴 수 없어요.`)) return;
+              clear();
+              toast('번호함을 모두 비웠어요');
+            }}
+          >
+            🗑️ 전체 삭제
+          </button>
+        </div>
+      )}
 
       {saved.length === 0 && (
         <div className="card empty">
