@@ -57,7 +57,7 @@ self.addEventListener('fetch', (e) => {
 
 // ── 당첨 알림 ──
 // 서버는 내용 없는 알림만 보낸다. 받으면 서버에 문구를 물어보고 보여 준다.
-const API = 'https://lotto-reviews.lottojjin.workers.dev';
+const API = 'https://lotto-reviews.jjin.workers.dev';
 
 self.addEventListener('push', (e) => {
   e.waitUntil(
