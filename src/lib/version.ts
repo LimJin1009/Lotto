@@ -22,6 +22,19 @@ function currentScript(): string | null {
   return scriptName(src);
 }
 
+/** 1분 안에 이미 자동 새로고침을 했으면 true (새로고침이 되풀이되지 않게) */
+function reloadedJustNow(): boolean {
+  try {
+    const KEY = 'lotto.autoReload';
+    const last = Number(sessionStorage.getItem(KEY) ?? 0);
+    if (Date.now() - last < 60_000) return true;
+    sessionStorage.setItem(KEY, String(Date.now()));
+    return false;
+  } catch {
+    return true; // 기록을 못 남기면 자동 새로고침은 하지 않는다
+  }
+}
+
 /** 사이트에 새 버전이 있으면 true */
 export function useUpdateAvailable(): boolean {
   const [available, setAvailable] = useState(false);
@@ -31,6 +44,7 @@ export function useUpdateAvailable(): boolean {
     const mine = currentScript();
     if (!mine) return;
     let busy = false;
+    const started = Date.now();
 
     const check = async () => {
       if (busy || document.visibilityState !== 'visible') return;
@@ -38,7 +52,14 @@ export function useUpdateAvailable(): boolean {
       try {
         const html = await (await fetch('./', { cache: 'no-cache' })).text();
         const latest = scriptName(html);
-        if (latest && latest !== mine) setAvailable(true);
+        if (latest && latest !== mine) {
+          // 앱을 막 연 참이면(아직 아무것도 안 했을 때) 묻지 않고 바로 새 버전으로 바꾼다. 쓰는 중이면 알림 띠만 띄운다.
+          if (Date.now() - started < 15_000 && !reloadedJustNow()) {
+            location.reload();
+            return;
+          }
+          setAvailable(true);
+        }
         // 서비스 워커도 새것이 있는지 확인
         (await navigator.serviceWorker?.getRegistration())?.update().catch(() => {});
       } catch {

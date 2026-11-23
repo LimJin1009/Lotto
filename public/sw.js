@@ -2,7 +2,8 @@
 // - 화면(HTML): 인터넷 먼저 (브라우저 저장본도 건너뛰고 사이트에 새 버전을 물어봄), 안 되면 저장본
 // - 같은 사이트의 파일(JS·CSS·아이콘): 저장본 먼저 (파일 이름에 버전이 붙어 있음)
 // - 다른 사이트(당첨번호 데이터, 글꼴): 건드리지 않음
-const CACHE = 'lotto-v3';
+// v4 (11/23): 서버 주소가 바뀌어서(lottojjin → jjin), 옛 버전을 켜 둔 화면은 새 서비스 워커가 깔릴 때 한 번 새로고침한다
+const CACHE = 'lotto-v4';
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './manifest.webmanifest', './icon-192.png'])).then(() => self.skipWaiting()));
@@ -10,10 +11,17 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-      .then(() => self.clients.claim()),
+    (async () => {
+      const old = (await caches.keys()).filter((k) => k !== CACHE);
+      await Promise.all(old.map((k) => caches.delete(k)));
+      await self.clients.claim();
+      // 처음 설치가 아니라 업데이트일 때만: 열려 있는 옛 화면을 새 버전으로 다시 연다
+      // (옛 화면은 옛 서버 주소를 들고 있어서 후기·알림이 안 된다. 첫 화면은 늘 인터넷에서 새로 받으므로 새로고침하면 새 버전)
+      if (old.length) {
+        const wins = await self.clients.matchAll({ type: 'window' });
+        await Promise.all(wins.map((w) => w.navigate(w.url).catch(() => {})));
+      }
+    })(),
   );
 });
 
