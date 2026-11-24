@@ -97,7 +97,7 @@ function loadTrumpet(c: AudioContext) {
  * 트럼펫 한 음. 가장 가까운 녹음을 골라 높이를 살짝 옮겨 분다.
  * long이면 떨림 있는 긴 소리를 dur만큼 불고 자연스럽게 끊고, 아니면 "따!" 하고 짧게 끊는다.
  */
-function trumpet(t: number, m: number, dur: number, vol: number, long: boolean) {
+function trumpet(t: number, m: number, dur: number, vol: number, long: boolean, soft = false) {
   if (!ctx || !master) return;
   const map = long ? tpSus : tpStac;
   let root = -1;
@@ -112,10 +112,20 @@ function trumpet(t: number, m: number, dur: number, vol: number, long: boolean) 
   src.playbackRate.value = 2 ** ((m - root) / 12);
   const len = long ? dur : Math.min(dur, 0.8);
   vol *= 0.45; // 트럼펫이 너무 커서 줄임
-  g.gain.setValueAtTime(vol, t);
+  if (soft) {
+    // 부드럽게: 천천히 불기 시작하고 날카로운 높은 소리를 깎는다
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.06);
+  } else g.gain.setValueAtTime(vol, t);
   g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.1));
   g.gain.linearRampToValueAtTime(0.0001, t + len + 0.08);
-  src.connect(g).connect(master);
+  if (soft) {
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1800;
+    lp.Q.value = 0.5;
+    src.connect(lp).connect(g).connect(master);
+  } else src.connect(g).connect(master);
   src.start(t);
   src.stop(t + len + 0.1);
 }
@@ -381,8 +391,8 @@ export function soundPop(k: number) {
   timpani(t + 0.11, 0.2, tf * 1.335, 1.1); // 둥!
   kick(t + 0.11, 0.3, 110, 40, 0.6);
   // 트럼펫 "따-다—!" 공이 나올수록 한 음씩 높아진다
-  trumpet(t, 69 + up, 0.11, 0.16, false);
-  trumpet(t + 0.11, 74 + up, 0.55, 0.2, true);
+  trumpet(t, 62 + up, 0.11, 0.16, false, true); // 음역을 내리고 부드럽게(찢어지지 않게)
+  trumpet(t + 0.11, 67 + up, 0.55, 0.2, true, true);
   glock(t + 0.11, 86 + up, 0.03);
   crowd(t + 0.11, 62 + up, 0.45, 0.04);
   level = Math.min(5, k + 1);
