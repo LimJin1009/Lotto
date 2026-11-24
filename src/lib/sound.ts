@@ -1,8 +1,8 @@
 // 추첨기 소리. 파일 없이 브라우저가 직접 만든다(Web Audio): 앱 용량이 그대로고 저작권 걱정이 없다.
-// 야구장 응원 가락을 오케스트라처럼 웅장하게: 큰북·팀파니 "쿵, 쿵, 둥둥둥" + 금관 합주 + 넓은 공연장 울림. 전자 오르간 같은 소리와 딱딱한 잡음(스네어·박수)은 쓰지 않는다.
+// 야구장 응원 가락을 웅장하게: 큰북·팀파니 "쿵, 쿵, 둥둥둥" + 철금·마림바(채로 치는 악기) + 넓은 공연장 울림. 전자 오르간 같은 소리와 딱딱한 잡음(스네어·박수)은 쓰지 않는다.
 // - 섞이는 동안: 응원 북이 깔리고, 공이 나오기 전까지 점점 세지다가 "둥둥둥둥" 몰아친다
 // - 공이 나올 때: 팀파니 "두-둥!" + 큰북 + 철금 "띵"(나올수록 한 음씩 올라감). 길게 끄는 오르간 같은 소리는 안 씀. 북은 다시 작게부터
-// - 6개를 다 뽑으면: 야구장 "차지" 나팔 "따라라 딴~ 따 따—!"
+// - 6개를 다 뽑으면: 야구장 "차지" 가락 "따라라 딴~ 따 따—!"를 철금·마림바·팀파니로
 // 버스·사무실에서 몰래 여는 경우가 많아 처음엔 꺼 둔다. 🔊 버튼으로 켜면 기억한다.
 // 브라우저 규칙상 손가락으로 누른 뒤에만 소리를 낼 수 있어서, 버튼을 누를 때 소리 장치를 깨운다.
 
@@ -127,56 +127,6 @@ function timpani(t: number, vol: number, f: number, dur = 0.7) {
   }
 }
 
-/**
- * 금관 한 음(트럼펫·호른·트롬본). 오르간처럼 납작하지 않게:
- * 살짝 아래에서 밀어 올리듯 시작하고, "빠—" 하고 밝아졌다 가라앉고, 긴 음엔 떨림을 준다.
- * bright가 낮을수록 어둡고 두툼한 소리(트롬본), 높을수록 밝은 소리(트럼펫).
- */
-function horn(t: number, m: number, dur: number, vol: number, bright = 1) {
-  if (!ctx || !master) return;
-  const f = hz(m);
-  const fl = ctx.createBiquadFilter();
-  const g = ctx.createGain();
-  fl.type = 'lowpass';
-  fl.Q.value = 1.1;
-  fl.frequency.setValueAtTime(300, t);
-  fl.frequency.exponentialRampToValueAtTime(3400 * bright, t + 0.05);
-  fl.frequency.setTargetAtTime(1900 * bright, t + 0.08, 0.1);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.03);
-  g.gain.setTargetAtTime(vol * 0.8, t + 0.06, 0.08);
-  g.gain.setTargetAtTime(0.0001, t + dur - 0.03, 0.04);
-  fl.connect(g).connect(master);
-  const vib = ctx.createOscillator();
-  const vibAmt = ctx.createGain();
-  vib.frequency.value = 5 + Math.random();
-  vibAmt.gain.setValueAtTime(0, t);
-  if (dur > 0.3) vibAmt.gain.linearRampToValueAtTime(f * 0.007, t + dur);
-  vib.connect(vibAmt);
-  for (const det of [-9, 0, 9]) {
-    // 여러 대가 함께 부는 것처럼 음을 아주 살짝씩 어긋나게 겹친다
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(f * 0.97, t);
-    o.frequency.exponentialRampToValueAtTime(f, t + 0.035);
-    o.detune.value = det;
-    vibAmt.connect(o.frequency);
-    o.connect(fl);
-    o.start(t);
-    o.stop(t + dur + 0.2);
-  }
-  vib.start(t);
-  vib.stop(t + dur + 0.2);
-}
-
-/** 금관 합주: 가락(트럼펫) + 한 옥타브 아래(호른) + 화음 + 맨 아래 받침(트롬본) */
-function brass(t: number, melody: number, chord: number[], dur: number, vol: number) {
-  horn(t, melody, dur, vol, 1.1);
-  horn(t, melody - 12, dur, vol * 0.6, 0.8);
-  for (const m of chord) horn(t, m, dur, vol * 0.45, 0.75);
-  horn(t, chord[0] - 12, dur, vol * 0.5, 0.5);
-}
-
 // ── 응원 북 ──
 // 야구장 응원처럼 "쿵, 쿵, 둥둥둥" (8분음 8칸 중 0·2·4·5·6에 친다). 큰북과 팀파니가 함께 친다.
 // 공이 나오기 전까지 점점 세지다가 팀파니가 "두르르르" 몰아친다.
@@ -225,12 +175,12 @@ function drumStop() {
   timer = 0;
 }
 
-/** 추첨 시작: 금관 "빠-밤!" + 큰북, 그리고 응원 북이 시작된다 */
+/** 추첨 시작: 철금·마림바 "따-단!" + 팀파니·큰북, 그리고 응원 북이 시작된다 */
 export function soundStart() {
   if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.02;
-  brass(t, 67, [60, 64], 0.13, 0.06);
-  brass(t + 0.15, 72, [64, 67], 0.5, 0.07);
+  mallets(t, 67, [60, 64], 0.13, 0.1);
+  mallets(t + 0.15, 72, [64, 67], 0.5, 0.11);
   kick(t + 0.15, 0.6, 110, 38, 0.7);
   timpani(t + 0.15, 0.4, 65, 1.2);
   level = 0;
@@ -276,8 +226,46 @@ export function soundPop(k: number) {
   if (k >= 5) drumStop();
 }
 
+/** 마림바 "똥": 나무 건반을 채로 치는 따뜻한 소리. 철금보다 낮고 부드럽다 */
+function marimba(t: number, m: number, vol: number) {
+  if (!ctx || !master) return;
+  const f = hz(m);
+  for (const [ratio, amp, life] of [
+    [1, 1, 0.7],
+    [3.9, 0.25, 0.12],
+    [9.2, 0.06, 0.05],
+  ] as const) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = f * ratio;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * amp, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + life);
+    o.connect(g).connect(master);
+    o.start(t);
+    o.stop(t + life + 0.02);
+  }
+}
+
 /**
- * 한 게임(6개)을 다 뽑았을 때: 야구장 "차지(Charge)" 가락 "따라라 딴~ 따 따—!"를 금관 합주로.
+ * 채로 치는 악기 합주 한 음: 철금(가락) + 마림바(한 옥타브 아래) + 마림바 화음.
+ * 긴 음은 채로 빠르게 굴려(트레몰로) 소리를 이어 간다. 오르간처럼 한 소리로 쭉 끌지 않는다.
+ */
+function mallets(t: number, melody: number, chord: number[], dur: number, vol: number) {
+  const roll = dur > 0.25;
+  const hits = roll ? Math.floor(dur / 0.055) : 1;
+  for (let i = 0; i < hits; i++) {
+    const at = t + i * 0.055;
+    const v = vol * (i === 0 ? 1 : 0.45 + 0.25 * Math.sin((i / hits) * Math.PI)); // 굴리는 동안 부풀었다 잦아든다
+    glock(at, melody + 12, v * 0.9);
+    marimba(at, melody, v);
+    if (i % 2 === 0) for (const m of chord) marimba(at, m, v * 0.5);
+  }
+}
+
+/**
+ * 한 게임(6개)을 다 뽑았을 때: 야구장 "차지(Charge)" 가락 "따라라 딴~ 따 따—!"를 철금·마림바·팀파니로.
  * 옛 군대 나팔 신호에서 온 누구나 쓰는 가락이다. 마지막 음은 팀파니 "두르르르"와 큰북으로 크게 맺는다.
  */
 export function soundDone() {
@@ -285,17 +273,20 @@ export function soundDone() {
   if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.35;
   const n = 0.14; // 짧은 음 길이
-  const notes: [number, number, number, number[]][] = [
-    [0, 67, n, [60]], // 솔
-    [n, 72, n, [64]], // 도
-    [2 * n, 76, n, [67]], // 미
-    [3 * n, 79, 0.34, [72, 76]], // 솔—
-    [3 * n + 0.38, 76, n, [67, 72]], // 미
-    [4 * n + 0.4, 79, 1.5, [64, 67, 72]], // 솔————
+  const notes: [number, number, number, number[], number][] = [
+    // [시각, 가락, 길이, 화음, 팀파니 음]
+    [0, 67, n, [60], 0], // 솔
+    [n, 72, n, [64], 0], // 도
+    [2 * n, 76, n, [67], 0], // 미
+    [3 * n, 79, 0.34, [72, 76], 98], // 솔—
+    [3 * n + 0.38, 76, n, [67, 72], 0], // 미
+    [4 * n + 0.4, 79, 1.4, [64, 67, 72], 65], // 솔————
   ];
-  for (const [at, m, d, ch] of notes) brass(t + at, m, ch, d, 0.065);
+  for (const [at, m, d, ch, tf] of notes) {
+    mallets(t + at, m, ch, d, 0.11);
+    timpani(t + at, tf ? 0.42 : 0.2, tf || 98, tf ? 1 : 0.35); // 가락마다 팀파니가 같이 친다
+  }
   kick(t + 3 * n, 0.5);
-  timpani(t + 3 * n, 0.35, 98);
   const end = t + 4 * n + 0.4;
   for (let k = 0; k < 10; k++) timpani(end - 0.4 + k * 0.04, 0.12 + k * 0.025, 65, 0.35); // 두르르르
   kick(end, 0.75, 110, 36, 1.0);
