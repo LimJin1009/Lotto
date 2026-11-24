@@ -4,7 +4,7 @@
 // - 섞이는 동안: 반복 가락이 깔리고, 공이 나오기 전까지 철금이 얹히며 커지다 팀파니가 "두르르르" 몰아친다
 // - 공이 나올 때: 큰북·팀파니 "두-둥!" + 철금 "띵" + 관중 "오!"(나올수록 음이 올라감)
 // - 번호가 하나씩 뽑힐 때마다 빨라지고 반음씩 높아지고 북이 촘촘해져 점점 더 조여 온다
-// - 6개를 다 뽑으면: 팀파니 "두르르르" → 큰북·밝은 화음, 그리고 아저씨가 힘 빠진 목소리로 "짜라~"(폰의 음성 합성)
+// - 6개를 다 뽑으면: 트럼펫 마무리 가락 + 팀파니 "두르르르" → 큰북·밝은 화음
 // 버스·사무실에서 몰래 여는 경우가 많아 처음엔 꺼 둔다. 🔊 버튼으로 켜면 기억한다.
 // 브라우저 규칙상 손가락으로 누른 뒤에만 소리를 낼 수 있어서, 버튼을 누를 때 소리 장치를 깨운다.
 
@@ -335,11 +335,6 @@ function tick() {
     if (MAJOR3[bar] && s === 15) s = 16;
     marimba(t, root + s - 12, 0.24 + grow * 0.12, 0.5);
     if (level >= 3) marimba(t + e / 2, root + ARP[(i + 3) % 8] - 12, 0.07 + grow * 0.06, 0.3); // 3개부터: 사이사이 음이 더 끼어든다
-    // 3개부터: 마디마다 트럼펫이 높은 음을 길게 불어 긴장을 끌어올린다
-    if (level >= 3 && i === 0) {
-      const tm = root + 31 > 86 ? root + 19 : root + 31; // 너무 높아 녹음과 멀어지면 한 옥타브 아래로
-      trumpet(t, tm, e * 7, 0.12 + grow * 0.12 + (level - 3) * 0.04, true);
-    }
     // 커질수록 철금이 한 옥타브 위에서 같이 반짝인다(뒤로 갈수록 일찍 들어온다)
     const glockFrom = Math.max(0, 0.3 - level * 0.06);
     if (grow > glockFrom) glock(t, root + s + 12, (grow - glockFrom) * 0.12 + level * 0.01);
@@ -402,30 +397,7 @@ export function soundPop(k: number) {
 }
 
 /**
- * 아저씨가 힘 빠진 목소리로 "짜라~".
- * 폰에 들어 있는 글 읽어 주는 목소리(음성 합성)를 낮고 느리고 작게 낸다. 녹음 파일이 아니라서 폰마다 목소리가 다르다.
- */
-function zzara() {
-  const s = window.speechSynthesis;
-  if (!s || !on) return;
-  try {
-    const u = new SpeechSynthesisUtterance('짜라~');
-    u.lang = 'ko-KR';
-    const ko = s.getVoices().filter((v) => v.lang.replace('_', '-').startsWith('ko'));
-    u.voice = ko.find((v) => /male|남|man|InJoon|Minsu/i.test(v.name) && !/female|여/i.test(v.name)) ?? ko[0] ?? null;
-    u.pitch = 0.2; // 낮게(아저씨)
-    u.rate = 0.7; // 느리게, 힘 빠지게
-    u.volume = 0.8;
-    s.cancel();
-    s.speak(u);
-  } catch {
-    /* 음성 합성이 없는 폰이면 조용히 넘어간다 */
-  }
-}
-
-/**
- * 한 게임(6개)을 다 뽑았을 때: 팀파니 "두르르르" → 큰북 "쿵!"과 밝은 화음으로 터뜨린 뒤,
- * 아저씨가 힘 빠진 목소리로 "짜라~".
+ * 한 게임(6개)을 다 뽑았을 때: 트럼펫 마무리 가락 + 팀파니 "두르르르" → 큰북 "쿵!"과 밝은 화음으로 끝낸다.
  */
 export function soundDone() {
   drumStop();
@@ -455,9 +427,6 @@ export function soundDone() {
   kick(end, 0.8, 110, 34, 1.1);
   timpani(end, 0.55, 73.4, 1.8);
   crowd(end, 69, 0.9, 0.08);
-  // 트럼펫이 잦아들 즈음 "짜라~"
-  const wait = (end + 1.6 - ctx.currentTime) * 1000;
-  setTimeout(zzara, Math.max(0, wait));
 }
 
 /** 화면을 떠나는 등 추첨이 중간에 멈출 때 */
