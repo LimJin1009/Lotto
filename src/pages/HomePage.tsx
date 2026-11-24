@@ -16,6 +16,7 @@ import { extractPicks, personalNumbers, type PersonalInput } from '../lib/person
 import { applyFilter, loadFilter, saveFilter, type PickFilter } from '../lib/picks';
 import { randInt, randomNumbers } from '../lib/random';
 import { statsNumbers, type StatsStrategy } from '../lib/stats';
+import { isSoundOn, setSoundOn, soundDone, soundPop, soundStart, unlock } from '../lib/sound';
 import { normalizeWish, wishNumbers } from '../lib/wish';
 import type { Draw, GenResult } from '../lib/types';
 
@@ -124,6 +125,11 @@ export function HomePage() {
   useEffect(() => onJackpotOpen(() => setJackpotOpen(isJackpotOpen())), []);
   const [jackpotUses, setJackpotUses] = useState(0);
 
+  const [soundOn, setSoundOnState] = useState(isSoundOn);
+  const toggleSound = () => {
+    setSoundOn(!soundOn);
+    setSoundOnState(!soundOn);
+  };
   const api = useRef<MachineApi | null>(null);
   const machineBox = useRef<HTMLElement>(null);
 
@@ -195,6 +201,7 @@ export function HomePage() {
   const start = async () => {
     const m = api.current;
     if (!m || notReady) return;
+    unlock();
     const id = ++run.current;
     // 번호는 추첨 전에 이미 정해 둔다. 추첨기는 그 공을 꺼내는 모습을 보여줄 뿐이다.
     const list = Array.from({ length: count }, (_, g) => (jackpot ? build(g) : applyFilter(build(g), filter)));
@@ -215,16 +222,20 @@ export function HomePage() {
       setCurrent(r);
       setDrawn([]);
       m.setMixing(true);
+      soundStart();
       await wait(g === 0 ? 1900 : 1100);
+      let k = 0;
       for (const n of shuffle(r.numbers)) {
         if (run.current !== id) return;
         await wait(500);
         if (run.current !== id) return;
         await m.extract(n);
         if (run.current !== id) return;
+        soundPop(k++);
         setDrawn((d) => [...d, n]);
       }
       m.setMixing(false);
+      soundDone();
       setResults((l) => pushResult(l, r));
       batch.current.done = g + 1;
       if (g < list.length - 1) {
@@ -257,6 +268,7 @@ export function HomePage() {
     }
     api.current?.reset();
     api.current?.setMixing(false);
+    soundDone();
     setRunning(false);
     if (last?.method === 'jackpot') setJackpotDone((n) => n + 1);
   };
@@ -314,6 +326,15 @@ export function HomePage() {
           {running && current
             ? `${current.emoji} ${current.title}${batch.current.list.length > 1 ? ` · ${gameNo}/${batch.current.list.length}게임` : ''}`
             : '로또 찐 명당 추첨기'}
+          <button
+            type="button"
+            className="sound-btn"
+            onClick={toggleSound}
+            aria-pressed={soundOn}
+            aria-label={soundOn ? '소리 끄기' : '소리 켜기'}
+          >
+            {soundOn ? '🔊' : '🔇'}
+          </button>
         </div>
         <DrawMachine apiRef={api} onShake={() => shake.current()} />
         <div className="tray" aria-live="polite">

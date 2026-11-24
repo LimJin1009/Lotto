@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useTilt } from '../lib/tilt';
 import { BR, C, extractBall, makeWorld, R, SIZE, stepWorld, type PBall } from '../lib/machine';
 import { ballColor, ballPalette } from './Ball';
+import { ambience } from '../lib/sound';
 
 /** 광택 플라스틱 공 한 개를 미리 그려 둔다 (CSS의 .ball과 같은 모양) */
 function makeBallSprite(n: number, dpr: number): HTMLCanvasElement {
@@ -224,10 +225,19 @@ export function DrawMachine({ apiRef, onShake }: { apiRef: React.RefObject<Machi
     const loop = (ts: number) => {
       acc += Math.min(ts - last, 100);
       last = ts;
+      let hits = 0;
       while (acc >= 1000 / 60) {
-        stepWorld(world.current, performance.now());
+        const w = world.current;
+        const before = w.balls.map((b) => [b.vx, b.vy]);
+        stepWorld(w, performance.now());
+        // 속도가 확 꺾인 공 = 통이나 다른 공에 세게 부딪친 공 → 딸깍 소리
+        w.balls.forEach((b, i) => {
+          const p = before[i];
+          if (p && !b.out && Math.hypot(b.vx - p[0], b.vy - p[1]) > 2.2) hits++;
+        });
         acc -= 1000 / 60;
       }
+      ambience(world.current.air, hits);
       draw();
       raf = requestAnimationFrame(loop);
     };

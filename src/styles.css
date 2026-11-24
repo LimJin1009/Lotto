@@ -1156,6 +1156,25 @@ h2 small {
   font-size: 15px;
   min-height: 22px;
   text-align: center;
+  position: relative;
+  align-self: stretch;
+  padding: 0 40px;
+}
+
+/* 추첨기 소리 켜기/끄기 (처음엔 꺼짐) */
+.sound-btn {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .machine {
