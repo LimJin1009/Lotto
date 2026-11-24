@@ -113,10 +113,10 @@ export function ambience(air: number, hits: number) {
   const now = ctx.currentTime;
   hiss.g.gain.setTargetAtTime(air * 0.09, now, 0.12);
   hiss.f.frequency.setTargetAtTime(900 + air * 900, now, 0.2);
-  // 너무 다닥다닥 겹치지 않게 1초에 최대 약 40번
-  if (hits > 0 && now - lastClack > 0.025) {
+  // 섞일 때는 공 십여 개가 매 장면 부딪친다. 다 내면 시끄러우니 1초에 최대 약 25번, 크기도 들쭉날쭉하게.
+  if (hits > 0 && now - lastClack > 0.03 + Math.random() * 0.03) {
     lastClack = now;
-    clack(now + Math.random() * 0.01, Math.min(0.5, 0.12 + hits * 0.05));
+    clack(now + Math.random() * 0.01, (0.06 + Math.min(hits, 6) * 0.025) * (0.5 + Math.random() * 0.5));
   }
 }
 
