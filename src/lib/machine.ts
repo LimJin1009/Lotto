@@ -75,7 +75,7 @@ export function tiltGravity(beta: number, gamma: number, screenAngle = 0): { x: 
   if (len < 0.12) return null;
   return { x: x / len, y: y / len };
 }
-const MAX_SPEED = 11;
+const MAX_SPEED = 8; // 너무 빨리 날지 않게
 const JET_WIDTH = 46;
 
 /** 1/60초만큼 움직인다. now는 performance.now() 값 */
@@ -99,7 +99,7 @@ export function stepWorld(w: World, now: number, rand: () => number = Math.rando
       const below = (b.y - C) / R; // -1(위) ~ 1(아래)
       // 1) 바닥 가운데 노즐에서 위로 부는 강한 바람 (가운데일수록, 아래일수록 셈)
       const jet = Math.exp(-(dx * dx) / (2 * JET_WIDTH * JET_WIDTH)) * (0.55 + 0.45 * Math.max(below, 0));
-      b.vy -= air * jet * 1.05;
+      b.vy -= air * jet * 0.75;
       // 2) 바닥에 깔린 공을 가운데 바람 쪽으로 쓸어 모으고 띄움
       if (below > 0.45) {
         b.vx -= air * dx * 0.006;
@@ -108,11 +108,11 @@ export function stepWorld(w: World, now: number, rand: () => number = Math.rando
       // 3) 위쪽에서는 바람이 양옆으로 갈라져 벽을 타고 내려가게 함
       if (below < -0.3) b.vx += air * Math.sign(dx || rand() - 0.5) * 0.18;
       // 4) 난기류
-      b.vx += (rand() - 0.5) * 1.1 * air;
-      b.vy += (rand() - 0.5) * 1.1 * air;
+      b.vx += (rand() - 0.5) * 0.45 * air; // 난기류를 줄여 덜 정신없게
+      b.vy += (rand() - 0.5) * 0.45 * air;
     }
-    b.vx *= 0.99;
-    b.vy *= 0.99;
+    b.vx *= 0.978; // 공기 저항을 늘려 부드럽게
+    b.vy *= 0.978;
     const sp = Math.hypot(b.vx, b.vy);
     if (sp > MAX_SPEED) {
       b.vx *= MAX_SPEED / sp;
@@ -164,8 +164,8 @@ function bounceWall(b: PBall) {
     b.y = C + ny * (R - BR);
     const vn = b.vx * nx + b.vy * ny;
     if (vn > 0) {
-      b.vx -= 1.8 * vn * nx;
-      b.vy -= 1.8 * vn * ny;
+      b.vx -= 1.6 * vn * nx; // 벽에서 덜 튕기게
+      b.vy -= 1.6 * vn * ny;
     }
   }
 }
