@@ -1,7 +1,9 @@
 // 추첨기 소리. 파일 없이 브라우저가 직접 만든다(Web Audio): 앱 용량이 그대로고 저작권 걱정이 없다.
-// - 바람 소리: 추첨기에 바람이 불 때 "쉬이—"
-// - 공 소리: 공이 통이나 서로 부딪칠 때 "딸깍" (많이 세게 부딪칠수록 자주)
-// - 공이 나올 때 "톡", 6개를 다 뽑으면 "짠"
+// 거친 소리(바람·딸깍)는 빼고, 유리종처럼 맑고 부드러운 소리에 은은한 울림(홀 잔향)을 입혔다.
+// - 추첨 시작: 위로 흩어지는 맑은 음 몇 개
+// - 섞이는 동안: 공이 세게 부딪칠 때 가끔 "띵—" (5음 음계라 아무렇게 겹쳐도 어울린다)
+// - 공이 나올 때: 종소리 한 번 (나올수록 한 음씩 올라감)
+// - 6개를 다 뽑으면: 종소리 화음
 // 버스·사무실에서 몰래 여는 경우가 많아 처음엔 꺼 둔다. 🔊 버튼으로 켜면 기억한다.
 // 브라우저 규칙상 손가락으로 누른 뒤에만 소리를 낼 수 있어서, 버튼을 누를 때 소리 장치를 깨운다.
 
@@ -15,9 +17,23 @@ try {
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
-let noiseBuf: AudioBuffer | null = null;
-let hiss: { g: GainNode; f: BiquadFilterNode } | null = null;
-let lastClack = 0;
+let outGain: GainNode | null = null;
+let lastChime = 0;
+
+/** 잔향(홀 울림): 서서히 사그라드는 잡음을 만들어 울림판으로 쓴다 */
+function makeHall(c: AudioContext, sec: number): AudioBuffer {
+  const len = Math.floor(c.sampleRate * sec);
+  const buf = c.createBuffer(2, len, c.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buf.getChannelData(ch);
+    let lp = 0;
+    for (let i = 0; i < len; i++) {
+      lp += (Math.random() * 2 - 1 - lp) * 0.35; // 날카로운 고음을 깎아 따뜻하게
+      d[i] = lp * (1 - i / len) ** 2.5;
+    }
+  }
+  return buf;
+}
 
 function init(): AudioContext | null {
   if (ctx) return ctx;
@@ -25,29 +41,21 @@ function init(): AudioContext | null {
   if (!AC) return null;
   ctx = new AC();
   const comp = ctx.createDynamicsCompressor();
-  comp.threshold.value = -12;
-  comp.ratio.value = 4;
+  comp.threshold.value = -16;
+  comp.ratio.value = 3;
   comp.connect(ctx.destination);
+  const out = ctx.createGain();
+  out.gain.value = on ? 1 : 0;
+  out.connect(comp);
+  // 소리 → (그대로) + (잔향) → 출력
   master = ctx.createGain();
-  master.gain.value = on ? 1 : 0;
-  master.connect(comp);
-  noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
-  const d = noiseBuf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-
-  // 바람 소리는 계속 틀어 두고 크기만 바꾼다
-  const src = ctx.createBufferSource();
-  src.buffer = noiseBuf;
-  src.loop = true;
-  const f = ctx.createBiquadFilter();
-  f.type = 'bandpass';
-  f.frequency.value = 1200;
-  f.Q.value = 0.6;
-  const g = ctx.createGain();
-  g.gain.value = 0;
-  src.connect(f).connect(g).connect(master);
-  src.start();
-  hiss = { g, f };
+  const hall = ctx.createConvolver();
+  hall.buffer = makeHall(ctx, 2.2);
+  const wet = ctx.createGain();
+  wet.gain.value = 0.35;
+  master.connect(out);
+  master.connect(hall).connect(wet).connect(out);
+  outGain = out;
   return ctx;
 }
 
@@ -68,95 +76,75 @@ export function setSoundOn(v: boolean) {
     /* 저장 못 해도 이번엔 적용 */
   }
   if (v) unlock();
-  if (ctx && master) master.gain.setTargetAtTime(v ? 1 : 0, ctx.currentTime, 0.03);
+  if (ctx && outGain) outGain.gain.setTargetAtTime(v ? 1 : 0, ctx.currentTime, 0.03);
 }
 
-function tone(t: number, f: number, f2: number, type: OscillatorType, dur: number, vol: number) {
+const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
+
+/**
+ * 유리종 소리 한 번. 기본음 + 종 특유의 어긋난 배음 몇 개를 겹치고,
+ * 높은 배음일수록 빨리 사라지게 해서 "띵—" 하고 맑게 남는다.
+ */
+function bell(t: number, f: number, vol: number, dur = 1.2) {
   if (!ctx || !master) return;
-  const o = ctx.createOscillator();
-  const g = ctx.createGain();
-  o.type = type;
-  o.frequency.setValueAtTime(f, t);
-  if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(master);
-  o.start(t);
-  o.stop(t + dur + 0.02);
+  const parts: [number, number, number][] = [
+    [1, 1, 1],
+    [2.0, 0.35, 0.55],
+    [2.76, 0.18, 0.35],
+    [5.4, 0.06, 0.18],
+  ];
+  for (const [ratio, amp, life] of parts) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = f * ratio;
+    const end = t + dur * life;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * amp, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, end);
+    o.connect(g).connect(master);
+    o.start(t);
+    o.stop(end + 0.05);
+  }
 }
 
-/** 플라스틱 공이 부딪치는 "딸깍" */
-function clack(t: number, vol: number) {
-  if (!ctx || !master || !noiseBuf) return;
-  const s = ctx.createBufferSource();
-  const f = ctx.createBiquadFilter();
-  const g = ctx.createGain();
-  s.buffer = noiseBuf;
-  f.type = 'bandpass';
-  f.frequency.value = 2600 + Math.random() * 2600;
-  f.Q.value = 6;
-  g.gain.setValueAtTime(vol, t);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-  s.connect(f).connect(g).connect(master);
-  s.start(t, Math.random() * 1.5);
-  s.stop(t + 0.05);
-  tone(t, 1800 + Math.random() * 1400, 0, 'sine', 0.03, vol * 0.25);
-}
+// A장조 5음 음계(라·시·도#·미·파#): 아무 음이나 겹쳐도 어울린다
+const PENTA = [69, 71, 73, 76, 78, 81, 83, 85, 88, 90];
 
 /**
  * 추첨기 화면이 매 장면마다 부른다.
  * air: 바람 세기(0~1), hits: 이번 장면에 세게 부딪친 공의 수
+ * 공이 부딪칠 때 가끔(1초에 서너 번) 작은 유리종이 울린다.
  */
 export function ambience(air: number, hits: number) {
-  if (!ready() || !ctx || !hiss) return;
+  if (!ready() || !ctx || hits <= 0) return;
   const now = ctx.currentTime;
-  hiss.g.gain.setTargetAtTime(air * 0.09, now, 0.12);
-  hiss.f.frequency.setTargetAtTime(900 + air * 900, now, 0.2);
-  // 섞일 때는 공 십여 개가 매 장면 부딪친다. 다 내면 시끄러우니 1초에 최대 약 25번, 크기도 들쭉날쭉하게.
-  if (hits > 0 && now - lastClack > 0.03 + Math.random() * 0.03) {
-    lastClack = now;
-    clack(now + Math.random() * 0.01, (0.06 + Math.min(hits, 6) * 0.025) * (0.5 + Math.random() * 0.5));
-  }
+  if (now - lastChime < 0.22 + Math.random() * 0.25) return;
+  lastChime = now;
+  const n = PENTA[Math.floor(Math.random() * PENTA.length)] + 12;
+  bell(now + 0.01, hz(n), (0.025 + air * 0.02) * (0.6 + Math.random() * 0.4), 0.9);
 }
 
-/** 추첨 시작: 바람이 들어가는 "푸슉" */
+/** 추첨 시작: 위로 흩어지는 맑은 음 */
 export function soundStart() {
-  if (!ready() || !ctx || !master || !noiseBuf) return;
-  const t = ctx.currentTime + 0.01;
-  const s = ctx.createBufferSource();
-  const f = ctx.createBiquadFilter();
-  const g = ctx.createGain();
-  s.buffer = noiseBuf;
-  f.type = 'lowpass';
-  f.frequency.setValueAtTime(300, t);
-  f.frequency.exponentialRampToValueAtTime(4000, t + 0.4);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.25, t + 0.15);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6);
-  s.connect(f).connect(g).connect(master);
-  s.start(t);
-  s.stop(t + 0.65);
+  if (!ready() || !ctx) return;
+  const t = ctx.currentTime + 0.02;
+  [69, 73, 76, 81, 85].forEach((m, i) => bell(t + i * 0.06, hz(m + 12), 0.05, 1.0));
 }
 
-/** 공 하나가 나왔을 때 "톡" (k번째일수록 조금씩 높아진다) */
+/** 공 하나가 나왔을 때 종소리 (k번째일수록 한 음씩 올라간다) */
 export function soundPop(k: number) {
   if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.01;
-  const base = 660 * 2 ** (([0, 2, 4, 5, 7, 9][k % 6] ?? 0) / 12);
-  tone(t, base * 1.6, base, 'sine', 0.09, 0.3);
-  tone(t + 0.02, base * 2, 0, 'triangle', 0.18, 0.12);
+  const m = PENTA[k % 6];
+  bell(t, hz(m), 0.16, 1.6);
 }
 
-/** 한 게임(6개)을 다 뽑았을 때 "짠" */
+/** 한 게임(6개)을 다 뽑았을 때 종소리 화음 */
 export function soundDone() {
   if (!ready() || !ctx) return;
-  const t = ctx.currentTime + 0.05;
-  [72, 76, 79, 84].forEach((m, i) => {
-    const f = 440 * 2 ** ((m - 69) / 12);
-    tone(t + i * 0.07, f, 0, 'triangle', i === 3 ? 0.7 : 0.2, 0.16);
-    tone(t + i * 0.07, f * 2, 0, 'sine', i === 3 ? 0.5 : 0.12, 0.05);
-  });
+  const t = ctx.currentTime + 0.25;
+  [57, 64, 69, 73, 76].forEach((m, i) => bell(t + i * 0.09, hz(m + 12), 0.11, 2.6));
 }
 
 // 다른 앱으로 가면 소리를 잠시 멈춘다
