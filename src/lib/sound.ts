@@ -3,7 +3,8 @@
 // 전자 오르간 같은 소리와 딱딱한 잡음(스네어·박수)은 쓰지 않는다.
 // - 섞이는 동안: 반복 가락이 깔리고, 공이 나오기 전까지 철금이 얹히며 커지다 팀파니가 "두르르르" 몰아친다
 // - 공이 나올 때: 큰북·팀파니 "두-둥!" + 철금 "띵" + 관중 "오!"(나올수록 음이 올라감)
-// - 6개를 다 뽑으면: 마무리 가락 후 밝은 화음 + 큰북 + 관중 "오—오—!"
+// - 번호가 하나씩 뽑힐 때마다 빨라지고 반음씩 높아지고 북이 촘촘해져 점점 더 조여 온다
+// - 6개를 다 뽑으면: 팀파니 "두르르르" → 큰북·밝은 화음, 그리고 아저씨가 힘 빠진 목소리로 "짜라~"(폰의 음성 합성)
 // 버스·사무실에서 몰래 여는 경우가 많아 처음엔 꺼 둔다. 🔊 버튼으로 켜면 기억한다.
 // 브라우저 규칙상 손가락으로 누른 뒤에만 소리를 낼 수 있어서, 버튼을 누를 때 소리 장치를 깨운다.
 
@@ -223,52 +224,62 @@ function crowd(t: number, m: number, dur: number, vol: number) {
 }
 
 // ── 선수 입장 곡(새로 지은 곡) ──
-// 경기장 조명이 꺼지고 선수가 들어오는 분위기. D단조, 1분에 100박.
+// 경기장 조명이 꺼지고 선수가 들어오는 분위기. D단조.
 // - 큰북·팀파니가 심장 뛰듯 "쿵… 쿵…" 울리고, 마림바가 낮게 반복하는 가락을 깐다.
 // - 공이 나오기 전까지 반복 가락에 철금이 얹히며 커지고, 꼭대기에선 팀파니가 "두르르르" 몰아친다.
+// - 번호가 하나씩 뽑힐 때마다 더 조여 온다: 빨라지고(96→156박), 반음씩 높아지고, 북이 촘촘해지고, 더 빨리 차오른다.
 // 코드: Dm – B♭ – F – C (한 마디씩)
 const ROOTS = [50, 46, 53, 48]; // 레, 시♭, 파, 도
 const ARP = [0, 7, 12, 15, 12, 7, 12, 19]; // 근음에서 위아래로 오르내리는 반복 가락(반음 수)
 const MAJOR3 = [false, true, true, true]; // 이 마디 화음이 장조면 반복 가락의 3도를 반음 올린다(장3도)
-const BPM = 100;
-const EIGHTH = 60 / BPM / 2;
-const GROW = 2.2; // 몇 초에 걸쳐 가장 커지나
 
 let timer = 0;
 let step = 0;
 let nextT = 0;
 let buildFrom = 0; // 이번에 커지기 시작한 시각
-let level = 0; // 나온 공 수(많을수록 전체가 조금씩 더 셈)
+let level = 0; // 지금까지 나온 공 수(0~5). 많을수록 더 긴장된다
+
+const bpm = () => 96 + level * 12; // 공 하나마다 12박씩 빨라진다
+const eighth = () => 60 / bpm() / 2;
+const growSec = () => Math.max(1, 2.2 - level * 0.25); // 뒤로 갈수록 더 빨리 차오른다
 
 function tick() {
   if (!ready() || !ctx) return;
   if (nextT < ctx.currentTime - 0.1) nextT = ctx.currentTime; // 잠깐 멈췄다 오면 밀린 걸 한꺼번에 치지 않게
   while (nextT < ctx.currentTime + 0.12) {
     const t = nextT;
+    const e = eighth();
     const i = step % 8;
     const bar = Math.floor(step / 8) % 4;
-    const root = ROOTS[bar];
-    const grow = Math.max(0, Math.min(1, (t - buildFrom) / GROW));
-    const vol = 0.18 + grow * 0.2 + level * 0.015;
+    const root = ROOTS[bar] + level; // 공 하나마다 반음씩 높아진다
+    const grow = Math.max(0, Math.min(1, (t - buildFrom) / growSec()));
+    const vol = 0.18 + grow * 0.2 + level * 0.03;
+    const drumF = hz(root - 12);
 
-    // 심장 박동 "쿵… 쿵-쿵"
+    // 심장 박동: 처음엔 "쿵… 쿵-쿵", 공이 나올수록 촘촘해진다
     if (i === 0) {
       kick(t, vol + 0.25, 110, 38, 0.6);
-      timpani(t, vol * 0.8, hz(root - 24) * 2, 0.9);
+      timpani(t, vol * 0.8, drumF, 0.9);
     }
     if (i === 4 || i === 5) kick(t, (vol + 0.1) * (i === 5 ? 0.7 : 1), 110, 40, 0.5);
+    if (level >= 2 && (i === 2 || i === 6)) kick(t, vol * 0.8, 110, 40, 0.4); // 2개부터: 박마다 쿵
+    if (level >= 4 && i % 2 === 1) kick(t, vol * 0.5, 110, 45, 0.3); // 4개부터: 반 박마다 쿵
 
     // 반복 가락: 마림바 (장조 마디는 3도를 장3도로)
     let s = ARP[i];
     if (MAJOR3[bar] && s === 15) s = 16;
     marimba(t, root + s - 12, 0.1 + grow * 0.1, 0.5);
-    // 커질수록 철금이 한 옥타브 위에서 같이 반짝인다
-    if (grow > 0.3) glock(t, root + s + 12, (grow - 0.3) * 0.12);
+    if (level >= 3) marimba(t + e / 2, root + ARP[(i + 3) % 8] - 12, 0.07 + grow * 0.06, 0.3); // 3개부터: 사이사이 음이 더 끼어든다
+    // 커질수록 철금이 한 옥타브 위에서 같이 반짝인다(뒤로 갈수록 일찍 들어온다)
+    const glockFrom = Math.max(0, 0.3 - level * 0.06);
+    if (grow > glockFrom) glock(t, root + s + 12, (grow - glockFrom) * 0.12 + level * 0.01);
 
-    // 꼭대기: 팀파니 "두르르르"
-    if (grow > 0.75) for (let k = 0; k < 3; k++) timpani(t + (k * EIGHTH) / 3, vol * (0.55 + k * 0.1), hz(root - 24) * 2, 0.35);
+    // 꼭대기: 팀파니 "두르르르" (마지막 공을 기다릴 땐 처음부터 계속 몰아친다)
+    if (grow > 0.75 - level * 0.12) {
+      for (let k = 0; k < 3; k++) timpani(t + (k * e) / 3, vol * (0.55 + k * 0.1), drumF, 0.35);
+    }
 
-    nextT += EIGHTH;
+    nextT += e;
     step++;
   }
 }
@@ -297,11 +308,11 @@ export function soundStart() {
   drumStart(t + 0.9);
 }
 
-/** 공 하나가 나왔을 때: 큰북·팀파니 "두-둥!" + 철금 "띵" + 관중 "오!" (k번째일수록 한 음씩 올라간다) */
+/** 공 하나가 나왔을 때: 큰북·팀파니 "두-둥!" + 철금 "띵" + 관중 "오!" (k번째일수록 높아진다). 다음 공은 더 긴장되게 */
 export function soundPop(k: number) {
   if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.01;
-  const up = [0, 2, 3, 5, 7, 10][k % 6];
+  const up = k + 1; // 다음 반복 가락과 같은 높이로 올라간다
   const tf = 73.4 * 2 ** (up / 12);
   timpani(t, 0.28, tf, 0.5); // 두-
   timpani(t + 0.11, 0.5, tf * 1.335, 1.1); // 둥!
@@ -309,56 +320,63 @@ export function soundPop(k: number) {
   glock(t + 0.11, 86 + up, 0.12);
   glock(t + 0.11, 93 + up, 0.06);
   crowd(t + 0.11, 62 + up, 0.45, 0.09);
-  level = k + 1;
-  buildFrom = t + 0.6;
-  nextT = Math.max(nextT, t + 0.6);
+  level = Math.min(5, k + 1);
+  buildFrom = t + 0.5;
+  nextT = Math.max(nextT, t + 0.5);
   if (k >= 5) drumStop();
 }
 
 /**
- * 한 게임(6개)을 다 뽑았을 때: 새로 지은 마무리 가락 "따-단 따—, 따 따 딴—!"을
- * 철금·마림바·팀파니로 치고, 마지막엔 D장조로 밝게 풀리며 관중 "오—오—!"와 큰북으로 끝낸다.
+ * 아저씨가 힘 빠진 목소리로 "짜라~".
+ * 폰에 들어 있는 글 읽어 주는 목소리(음성 합성)를 낮고 느리고 작게 낸다. 녹음 파일이 아니라서 폰마다 목소리가 다르다.
+ */
+function zzara() {
+  const s = window.speechSynthesis;
+  if (!s || !on) return;
+  try {
+    const u = new SpeechSynthesisUtterance('짜라~');
+    u.lang = 'ko-KR';
+    const ko = s.getVoices().filter((v) => v.lang.replace('_', '-').startsWith('ko'));
+    u.voice = ko.find((v) => /male|남|man|InJoon|Minsu/i.test(v.name) && !/female|여/i.test(v.name)) ?? ko[0] ?? null;
+    u.pitch = 0.2; // 낮게(아저씨)
+    u.rate = 0.7; // 느리게, 힘 빠지게
+    u.volume = 0.8;
+    s.cancel();
+    s.speak(u);
+  } catch {
+    /* 음성 합성이 없는 폰이면 조용히 넘어간다 */
+  }
+}
+
+/**
+ * 한 게임(6개)을 다 뽑았을 때: 팀파니 "두르르르" → 큰북 "쿵!"과 밝은 화음으로 터뜨린 뒤,
+ * 아저씨가 힘 빠진 목소리로 "짜라~".
  */
 export function soundDone() {
   drumStop();
   if (!ready() || !ctx) return;
-  const t = ctx.currentTime + 0.35;
-  const b = 60 / BPM / 2; // 8분음 길이
-  const notes: [number, number, boolean][] = [
-    // [몇 번째 8분음, 가락, 길게?]
-    [0, 62, false], // 레
-    [1, 69, false], // 라
-    [2, 74, true], // 레—
-    [4, 72, false], // 도
-    [5, 69, false], // 라
-    [6, 78, true], // 파#— (밝게 풀림)
-  ];
-  for (const [at, m, long] of notes) {
-    const tt = t + at * b;
-    const hits = long ? 8 : 1;
-    for (let i = 0; i < hits; i++) {
-      // 긴 음은 채를 빠르게 굴려 "또로로롱" 이어 간다
-      const v = i === 0 ? 1 : 0.5;
-      glock(tt + i * 0.055, m + 12, 0.1 * v);
-      marimba(tt + i * 0.055, m, 0.14 * v);
-    }
-    timpani(tt, long ? 0.4 : 0.2, long ? 73.4 : 110, long ? 1 : 0.35);
-    if (long) kick(tt, 0.55, 110, 38, 0.6);
-  }
-  const end = t + 6 * b;
-  for (let k = 0; k < 10; k++) timpani(end - 0.4 + k * 0.04, 0.12 + k * 0.025, 73.4, 0.35); // 두르르르
-  // 마지막: D장조 화음(레·파#·라) + 큰북 + 관중 "오—오—!"
-  for (const m of [62, 66, 69, 74]) marimba(end, m, 0.12, 1.2);
-  for (const m of [78, 81, 86]) glock(end, m, 0.08);
+  const t = ctx.currentTime + 0.3;
+  for (let k = 0; k < 14; k++) timpani(t + k * 0.04, 0.1 + k * 0.025, 73.4, 0.35); // 두르르르
+  const end = t + 0.6;
+  // D장조 화음(레·파#·라) + 큰북 + 관중 "오—!"
+  for (const m of [62, 66, 69, 74]) marimba(end, m, 0.14, 1.2);
+  for (const m of [78, 81, 86]) glock(end, m, 0.09);
   kick(end, 0.8, 110, 34, 1.1);
   timpani(end, 0.55, 73.4, 1.8);
-  crowd(end, 66, 0.5, 0.1);
-  crowd(end + 0.55, 69, 1.2, 0.11);
+  crowd(end, 69, 0.9, 0.1);
+  // 화음이 잦아들 즈음 "짜라~"
+  const wait = (end + 0.7 - ctx.currentTime) * 1000;
+  setTimeout(zzara, Math.max(0, wait));
 }
 
 /** 화면을 떠나는 등 추첨이 중간에 멈출 때 */
 export function soundStop() {
   drumStop();
+  try {
+    window.speechSynthesis?.cancel();
+  } catch {
+    /* 음성 합성이 없으면 넘어간다 */
+  }
 }
 
 // 다른 앱으로 가면 소리를 잠시 멈춘다
