@@ -1,5 +1,5 @@
-// 추첨기 소리. 파일 없이 브라우저가 직접 만든다(Web Audio): 앱 용량이 그대로고 저작권 걱정이 없다.
-// 경기장 선수 입장 분위기로 새로 지은 곡(다른 곡을 베끼지 않음): 큰북·팀파니 심장 박동 + 마림바 반복 가락 + 철금 + 관중 떼창 "오—" + 넓은 공연장 울림.
+// 추첨기 소리. 북·마림바·철금은 브라우저가 직접 만들고(Web Audio), 트럼펫은 저작권 없는(CC0) 진짜 녹음을 쓴다(public/sfx).
+// 경기장 선수 입장 분위기로 새로 지은 곡(다른 곡을 베끼지 않음): 큰북·팀파니 심장 박동 + 마림바 반복 가락 + 철금 + 진짜 트럼펫 + 관중 떼창 "오—" + 넓은 공연장 울림.
 // 전자 오르간 같은 소리와 딱딱한 잡음(스네어·박수)은 쓰지 않는다.
 // - 섞이는 동안: 반복 가락이 깔리고, 공이 나오기 전까지 철금이 얹히며 커지다 팀파니가 "두르르르" 몰아친다
 // - 공이 나올 때: 큰북·팀파니 "두-둥!" + 철금 "띵" + 관중 "오!"(나올수록 음이 올라감)
@@ -62,7 +62,61 @@ function init(): AudioContext | null {
   wet.gain.value = 0.3;
   master.connect(hp);
   master.connect(room).connect(wet).connect(hp);
+  loadTrumpet(ctx);
   return ctx;
+}
+
+// ── 진짜 트럼펫 녹음 ──
+// VSCO 2 Community Edition(CC0, 누구나 상업적으로도 쓸 수 있음)의 트럼펫 녹음 6음 × 2가지(길게·짧게). public/sfx/CREDITS.txt 참고.
+// 처음 소리를 켤 때만 받아 온다(합쳐서 약 260KB). 다 받기 전에는 트럼펫 자리를 철금이 대신한다.
+const TP_ROOTS = [67, 70, 74, 77, 81, 84]; // 녹음된 음 높이(솔·시♭·레·파·라·도)
+const tpSus = new Map<number, AudioBuffer>();
+const tpStac = new Map<number, AudioBuffer>();
+let tpLoading = false;
+function loadTrumpet(c: AudioContext) {
+  if (tpLoading) return;
+  tpLoading = true;
+  const base = `${import.meta.env.BASE_URL}sfx/`;
+  for (const m of TP_ROOTS) {
+    for (const [kind, map] of [
+      ['s', tpSus],
+      ['t', tpStac],
+    ] as const) {
+      fetch(`${base}tp_${kind}${m}.mp3`)
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(String(r.status)))))
+        .then((a) => c.decodeAudioData(a))
+        .then((buf) => map.set(m, buf))
+        .catch(() => {
+          /* 못 받으면 그 음은 철금이 대신한다 */
+        });
+    }
+  }
+}
+
+/**
+ * 트럼펫 한 음. 가장 가까운 녹음을 골라 높이를 살짝 옮겨 분다.
+ * long이면 떨림 있는 긴 소리를 dur만큼 불고 자연스럽게 끊고, 아니면 "따!" 하고 짧게 끊는다.
+ */
+function trumpet(t: number, m: number, dur: number, vol: number, long: boolean) {
+  if (!ctx || !master) return;
+  const map = long ? tpSus : tpStac;
+  let root = -1;
+  for (const r of TP_ROOTS) if (map.has(r) && (root < 0 || Math.abs(r - m) < Math.abs(root - m))) root = r;
+  if (root < 0) {
+    glock(t, m, vol * 0.4); // 아직 못 받았으면 철금으로
+    return;
+  }
+  const src = ctx.createBufferSource();
+  const g = ctx.createGain();
+  src.buffer = map.get(root)!;
+  src.playbackRate.value = 2 ** ((m - root) / 12);
+  const len = long ? dur : Math.min(dur, 0.8);
+  g.gain.setValueAtTime(vol, t);
+  g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.1));
+  g.gain.linearRampToValueAtTime(0.0001, t + len + 0.08);
+  src.connect(g).connect(master);
+  src.start(t);
+  src.stop(t + len + 0.1);
 }
 
 // 막 깨우는 중(suspended)이어도 미리 예약해 두면 깨어나는 순간 울린다
@@ -270,6 +324,11 @@ function tick() {
     if (MAJOR3[bar] && s === 15) s = 16;
     marimba(t, root + s - 12, 0.1 + grow * 0.1, 0.5);
     if (level >= 3) marimba(t + e / 2, root + ARP[(i + 3) % 8] - 12, 0.07 + grow * 0.06, 0.3); // 3개부터: 사이사이 음이 더 끼어든다
+    // 3개부터: 마디마다 트럼펫이 높은 음을 길게 불어 긴장을 끌어올린다
+    if (level >= 3 && i === 0) {
+      const tm = root + 31 > 86 ? root + 19 : root + 31; // 너무 높아 녹음과 멀어지면 한 옥타브 아래로
+      trumpet(t, tm, e * 7, 0.12 + grow * 0.12 + (level - 3) * 0.04, true);
+    }
     // 커질수록 철금이 한 옥타브 위에서 같이 반짝인다(뒤로 갈수록 일찍 들어온다)
     const glockFrom = Math.max(0, 0.3 - level * 0.06);
     if (grow > glockFrom) glock(t, root + s + 12, (grow - glockFrom) * 0.12 + level * 0.01);
@@ -303,7 +362,10 @@ export function soundStart() {
   kick(t, 0.75, 110, 34, 1.0);
   timpani(t, 0.5, 73.4, 1.6);
   crowd(t + 0.05, 62, 0.9, 0.1);
-  glock(t, 86, 0.08);
+  // 트럼펫 "따따 따—" (새로 지은 부름 가락)
+  trumpet(t, 69, 0.12, 0.35, false);
+  trumpet(t + 0.13, 74, 0.12, 0.38, false);
+  trumpet(t + 0.26, 81, 0.75, 0.42, true);
   level = 0;
   drumStart(t + 0.9);
 }
@@ -317,9 +379,11 @@ export function soundPop(k: number) {
   timpani(t, 0.28, tf, 0.5); // 두-
   timpani(t + 0.11, 0.5, tf * 1.335, 1.1); // 둥!
   kick(t + 0.11, 0.7, 110, 40, 0.6);
-  glock(t + 0.11, 86 + up, 0.12);
-  glock(t + 0.11, 93 + up, 0.06);
-  crowd(t + 0.11, 62 + up, 0.45, 0.09);
+  // 트럼펫 "따-다—!" 공이 나올수록 한 음씩 높아진다
+  trumpet(t, 69 + up, 0.11, 0.35, false);
+  trumpet(t + 0.11, 74 + up, 0.55, 0.42, true);
+  glock(t + 0.11, 86 + up, 0.06);
+  crowd(t + 0.11, 62 + up, 0.45, 0.08);
   level = Math.min(5, k + 1);
   buildFrom = t + 0.5;
   nextT = Math.max(nextT, t + 0.5);
@@ -356,16 +420,32 @@ export function soundDone() {
   drumStop();
   if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.3;
-  for (let k = 0; k < 14; k++) timpani(t + k * 0.04, 0.1 + k * 0.025, 73.4, 0.35); // 두르르르
-  const end = t + 0.6;
-  // D장조 화음(레·파#·라) + 큰북 + 관중 "오—!"
-  for (const m of [62, 66, 69, 74]) marimba(end, m, 0.14, 1.2);
-  for (const m of [78, 81, 86]) glock(end, m, 0.09);
+  // 트럼펫 마무리 가락(새로 지음): "따 따 따 따—, 따 딴————!" (D장조로 밝게)
+  const b = 0.17;
+  const tune: [number, number, number, boolean][] = [
+    // [몇 번째 박, 음, 길이, 길게?]
+    [0, 69, b, false], // 라
+    [1, 74, b, false], // 레
+    [2, 78, b, false], // 파#
+    [3, 81, b * 2.6, true], // 라—
+    [6, 78, b, false], // 파#
+    [7, 86, 1.5, true], // 높은 레————
+  ];
+  for (const [at, m, d, long] of tune) {
+    trumpet(t + at * b, m, d, long ? 0.45 : 0.38, long);
+    if (long) trumpet(t + at * b, m - 7, d, 0.25, true); // 두 번째 트럼펫이 아래에서 화음
+    timpani(t + at * b, long ? 0.4 : 0.18, long ? 73.4 : 110, long ? 1 : 0.35);
+  }
+  kick(t + 3 * b, 0.55, 110, 38, 0.6);
+  const end = t + 7 * b;
+  for (let k = 0; k < 10; k++) timpani(end - 0.4 + k * 0.04, 0.1 + k * 0.025, 73.4, 0.35); // 두르르르
+  // 마지막 음에 D장조 화음(레·파#·라) + 큰북 + 관중 "오—!"
+  for (const m of [62, 66, 69, 74]) marimba(end, m, 0.12, 1.2);
   kick(end, 0.8, 110, 34, 1.1);
   timpani(end, 0.55, 73.4, 1.8);
-  crowd(end, 69, 0.9, 0.1);
-  // 화음이 잦아들 즈음 "짜라~"
-  const wait = (end + 0.7 - ctx.currentTime) * 1000;
+  crowd(end, 69, 0.9, 0.08);
+  // 트럼펫이 잦아들 즈음 "짜라~"
+  const wait = (end + 1.6 - ctx.currentTime) * 1000;
   setTimeout(zzara, Math.max(0, wait));
 }
 

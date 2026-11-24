@@ -1,0 +1,4 @@
+트럼펫 소리(tp_s*.mp3 길게 부는 소리, tp_t*.mp3 짧게 끊는 소리, 숫자는 MIDI 음 높이)
+출처: VSCO 2 Community Edition (Versilian Studios) — https://github.com/sgossner/VSCO-2-CE
+라이선스: CC0 1.0 (누구나 허락 없이 상업적으로도 쓸 수 있음)
+가공: 앞부분만 잘라 끝을 부드럽게 줄이고, 크기를 맞춰 mp3(모노 96kbps)로 줄임
