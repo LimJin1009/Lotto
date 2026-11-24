@@ -111,6 +111,7 @@ function trumpet(t: number, m: number, dur: number, vol: number, long: boolean) 
   src.buffer = map.get(root)!;
   src.playbackRate.value = 2 ** ((m - root) / 12);
   const len = long ? dur : Math.min(dur, 0.8);
+  vol *= 0.45; // 트럼펫이 너무 커서 줄임
   g.gain.setValueAtTime(vol, t);
   g.gain.setValueAtTime(vol, t + Math.max(0.02, len - 0.1));
   g.gain.linearRampToValueAtTime(0.0001, t + len + 0.08);
@@ -293,7 +294,7 @@ let nextT = 0;
 let buildFrom = 0; // 이번에 커지기 시작한 시각
 let level = 0; // 지금까지 나온 공 수(0~5). 많을수록 더 긴장된다
 
-const bpm = () => 96 + level * 12; // 공 하나마다 12박씩 빨라진다
+const bpm = () => 116 + level * 12; // 공 하나마다 12박씩 빨라진다(116→176)
 const eighth = () => 60 / bpm() / 2;
 const growSec = () => Math.max(1, 2.2 - level * 0.25); // 뒤로 갈수록 더 빨리 차오른다
 
@@ -307,7 +308,7 @@ function tick() {
     const bar = Math.floor(step / 8) % 4;
     const root = ROOTS[bar] + level; // 공 하나마다 반음씩 높아진다
     const grow = Math.max(0, Math.min(1, (t - buildFrom) / growSec()));
-    const vol = 0.18 + grow * 0.2 + level * 0.03;
+    const vol = 0.26 + grow * 0.22 + level * 0.03; // 배경 북을 또렷하게
     const drumF = hz(root - 12);
 
     // 심장 박동: 처음엔 "쿵… 쿵-쿵", 공이 나올수록 촘촘해진다
@@ -322,7 +323,7 @@ function tick() {
     // 반복 가락: 마림바 (장조 마디는 3도를 장3도로)
     let s = ARP[i];
     if (MAJOR3[bar] && s === 15) s = 16;
-    marimba(t, root + s - 12, 0.1 + grow * 0.1, 0.5);
+    marimba(t, root + s - 12, 0.16 + grow * 0.1, 0.5);
     if (level >= 3) marimba(t + e / 2, root + ARP[(i + 3) % 8] - 12, 0.07 + grow * 0.06, 0.3); // 3개부터: 사이사이 음이 더 끼어든다
     // 3개부터: 마디마다 트럼펫이 높은 음을 길게 불어 긴장을 끌어올린다
     if (level >= 3 && i === 0) {
