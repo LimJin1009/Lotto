@@ -1,7 +1,7 @@
 // 추첨기 소리. 파일 없이 브라우저가 직접 만든다(Web Audio): 앱 용량이 그대로고 저작권 걱정이 없다.
 // 야구장 응원 가락을 오케스트라처럼 웅장하게: 큰북·팀파니 "쿵, 쿵, 둥둥둥" + 금관 합주 + 넓은 공연장 울림. 전자 오르간 같은 소리와 딱딱한 잡음(스네어·박수)은 쓰지 않는다.
 // - 섞이는 동안: 응원 북이 깔리고, 공이 나오기 전까지 점점 세지다가 "둥둥둥둥" 몰아친다
-// - 공이 나올 때: 나팔 "빠밤!"(나올수록 한 음씩 올라감). 북은 다시 작게부터
+// - 공이 나올 때: 팀파니 "두-둥!" + 큰북 + 철금 "띵"(나올수록 한 음씩 올라감). 길게 끄는 오르간 같은 소리는 안 씀. 북은 다시 작게부터
 // - 6개를 다 뽑으면: 야구장 "차지" 나팔 "따라라 딴~ 따 따—!"
 // 버스·사무실에서 몰래 여는 경우가 많아 처음엔 꺼 둔다. 🔊 버튼으로 켜면 기억한다.
 // 브라우저 규칙상 손가락으로 누른 뒤에만 소리를 낼 수 있어서, 버튼을 누를 때 소리 장치를 깨운다.
@@ -179,7 +179,7 @@ function brass(t: number, melody: number, chord: number[], dur: number, vol: num
 
 // ── 응원 북 ──
 // 야구장 응원처럼 "쿵, 쿵, 둥둥둥" (8분음 8칸 중 0·2·4·5·6에 친다). 큰북과 팀파니가 함께 친다.
-// 공이 나오기 전까지 점점 세지다가 팀파니가 "두르르르" 몰아친다. 밑에서는 낮은 금관이 "우우웅" 차오른다.
+// 공이 나오기 전까지 점점 세지다가 팀파니가 "두르르르" 몰아친다.
 const HITS = [1, 0, 1, 0, 1, 1, 1, 0];
 const BPM = 120;
 const EIGHTH = 60 / BPM / 2;
@@ -190,43 +190,6 @@ let step = 0;
 let nextT = 0;
 let buildFrom = 0; // 이번에 세지기 시작한 시각
 let level = 0; // 나온 공 수(많을수록 전체가 조금씩 더 셈)
-
-/** 낮은 금관이 서서히 차오르는 소리(긴장감). 공이 나오면 사라진다 */
-let swell: { g: GainNode; o: OscillatorNode[] } | null = null;
-function swellUp(t: number) {
-  if (!ctx || !master) return;
-  swellOff(t);
-  const fl = ctx.createBiquadFilter();
-  const g = ctx.createGain();
-  fl.type = 'lowpass';
-  fl.Q.value = 0.9;
-  fl.frequency.setValueAtTime(220, t);
-  fl.frequency.exponentialRampToValueAtTime(1300, t + GROW);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.05 + level * 0.006, t + GROW);
-  fl.connect(g).connect(master);
-  const o: OscillatorNode[] = [];
-  for (const m of [43, 48, 55]) {
-    for (const det of [-7, 7]) {
-      const x = ctx.createOscillator();
-      x.type = 'sawtooth';
-      x.frequency.value = hz(m);
-      x.detune.value = det;
-      x.connect(fl);
-      x.start(t);
-      o.push(x);
-    }
-  }
-  swell = { g, o };
-}
-function swellOff(t: number) {
-  if (!swell) return;
-  const s = swell;
-  swell = null;
-  s.g.gain.cancelScheduledValues(t);
-  s.g.gain.setTargetAtTime(0.0001, t, 0.06);
-  s.o.forEach((x) => x.stop(t + 0.5));
-}
 
 function tick() {
   if (!ready() || !ctx) return;
@@ -254,14 +217,12 @@ function drumStart(at: number) {
   drumStop();
   step = 0;
   nextT = buildFrom = at;
-  swellUp(at);
   timer = window.setInterval(tick, 25);
   tick();
 }
 function drumStop() {
   clearInterval(timer);
   timer = 0;
-  if (ctx) swellOff(ctx.currentTime);
 }
 
 /** 추첨 시작: 금관 "빠-밤!" + 큰북, 그리고 응원 북이 시작된다 */
@@ -276,21 +237,43 @@ export function soundStart() {
   drumStart(t + 0.75);
 }
 
-/** 공 하나가 나왔을 때 금관 "빠밤!" (k번째일수록 한 음씩 올라간다). 북은 다시 작게부터 */
+/** 글로켄슈필(철금) "띵": 맑고 짧게 반짝이는 쇠막대 소리. 길게 끄는 오르간 소리가 아니다 */
+function glock(t: number, m: number, vol: number) {
+  if (!ctx || !master) return;
+  const f = hz(m);
+  for (const [ratio, amp, life] of [
+    [1, 1, 1.2],
+    [2.76, 0.3, 0.4],
+    [5.4, 0.12, 0.15],
+  ] as const) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.value = f * ratio;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * amp, t + 0.003);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + life);
+    o.connect(g).connect(master);
+    o.start(t);
+    o.stop(t + life + 0.02);
+  }
+}
+
+/** 공 하나가 나왔을 때 타악기 "두-둥!" + 철금 "띵" (k번째일수록 한 음씩 올라간다). 북은 다시 작게부터 */
 export function soundPop(k: number) {
   if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.01;
   const up = [0, 2, 4, 5, 7, 9][k % 6];
-  swellOff(t);
-  kick(t + 0.1, 0.6, 110, 40, 0.6);
-  timpani(t + 0.1, 0.4, 65 * 2 ** (up / 12), 1);
-  brass(t, 67 + up, [60 + up], 0.09, 0.06);
-  brass(t + 0.1, 72 + up, [64 + up, 67 + up], 0.4, 0.07);
+  const tf = 82 * 2 ** (up / 12); // 공이 나올수록 팀파니 음도 올라간다
+  timpani(t, 0.28, tf, 0.5); // 두-
+  timpani(t + 0.11, 0.5, tf * 1.335, 1.1); // 둥!
+  kick(t + 0.11, 0.65, 110, 40, 0.6);
+  glock(t + 0.11, 84 + up, 0.12);
+  glock(t + 0.11, 91 + up, 0.06);
   level = k + 1;
   buildFrom = t + 0.6;
   nextT = Math.max(nextT, t + 0.6);
   if (k >= 5) drumStop();
-  else swellUp(t + 0.6);
 }
 
 /**
