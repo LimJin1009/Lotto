@@ -1,9 +1,8 @@
 // 추첨기 소리. 파일 없이 브라우저가 직접 만든다(Web Audio): 앱 용량이 그대로고 저작권 걱정이 없다.
-// K팝 댄스곡처럼: 124BPM 쿵쿵 킥 + 킥마다 숨 쉬듯 출렁이는 신스 화음 + 통통 튀는 베이스 + 반짝이는 아르페지오.
-// 딱딱한 잡음(스네어·박수) 소리는 일부러 쓰지 않는다.
-// - 섞이는 동안: 비트가 깔리고, 공이 나오기 전까지 아르페지오가 점점 밝아지고 킥이 빨라지며 차오른다(빌드업)
-// - 공이 나올 때: "짠!" 터지는 신스 화음(나올수록 한 음씩 올라감). 빌드업은 다시 처음부터
-// - 6개를 다 뽑으면: 짧은 후렴 멜로디 + 마무리 화음
+// 야구장 응원처럼: 응원 북 "쿵, 쿵, 둥둥둥" + 나팔 소리. 전자 오르간 같은 소리와 딱딱한 잡음(스네어·박수)은 쓰지 않는다.
+// - 섞이는 동안: 응원 북이 깔리고, 공이 나오기 전까지 점점 세지다가 "둥둥둥둥" 몰아친다
+// - 공이 나올 때: 나팔 "빠밤!"(나올수록 한 음씩 올라감). 북은 다시 작게부터
+// - 6개를 다 뽑으면: 야구장 "차지" 나팔 "따라라 딴~ 따 따—!"
 // 버스·사무실에서 몰래 여는 경우가 많아 처음엔 꺼 둔다. 🔊 버튼으로 켜면 기억한다.
 // 브라우저 규칙상 손가락으로 누른 뒤에만 소리를 낼 수 있어서, 버튼을 누를 때 소리 장치를 깨운다.
 
@@ -18,7 +17,6 @@ try {
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let outGain: GainNode | null = null;
-let padBus: GainNode | null = null; // 킥이 칠 때마다 작아졌다 커지는 화음 통로(출렁임)
 
 /** 짧은 잔향: 넓게 퍼지는 느낌만 살짝 */
 function makeRoom(c: AudioContext, sec: number): AudioBuffer {
@@ -62,8 +60,6 @@ function init(): AudioContext | null {
   wet.gain.value = 0.12;
   master.connect(hp);
   master.connect(room).connect(wet).connect(hp);
-  padBus = ctx.createGain();
-  padBus.connect(master);
   return ctx;
 }
 
@@ -92,197 +88,180 @@ const hz = (midi: number) => 440 * 2 ** ((midi - 69) / 12);
 
 // ── 악기 ──
 
-/** 킥: 짧고 단단한 "둠". 잡음 없이 아래로 떨어지는 음만 */
+/** 큰북 "쿵": 잡음 없이 아래로 떨어지는 음만 */
 function kick(t: number, vol: number) {
-  if (!ctx || !master || !padBus) return;
+  if (!ctx || !master) return;
   const o = ctx.createOscillator();
   const g = ctx.createGain();
   o.type = 'sine';
-  o.frequency.setValueAtTime(140, t);
-  o.frequency.exponentialRampToValueAtTime(48, t + 0.14);
+  o.frequency.setValueAtTime(130, t);
+  o.frequency.exponentialRampToValueAtTime(50, t + 0.15);
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.003);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
   o.connect(g).connect(master);
   o.start(t);
-  o.stop(t + 0.25);
-  // 킥이 칠 때 화음이 잠깐 작아졌다 다시 커진다(K팝·EDM 특유의 출렁임)
-  padBus.gain.setValueAtTime(0.25, t);
-  padBus.gain.linearRampToValueAtTime(1, t + 0.2);
+  o.stop(t + 0.32);
 }
 
-/** 슈퍼쏘: 톱니파 여러 개를 살짝 어긋나게 겹친 넓고 화려한 신스 화음 */
-function supersaw(t: number, notes: number[], dur: number, vol: number, cutFrom: number, cutTo: number, bus: AudioNode) {
-  if (!ctx) return;
-  const f = ctx.createBiquadFilter();
-  const g = ctx.createGain();
-  f.type = 'lowpass';
-  f.Q.value = 0.8;
-  f.frequency.setValueAtTime(cutFrom, t);
-  f.frequency.exponentialRampToValueAtTime(cutTo, t + dur);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
-  g.gain.setTargetAtTime(vol * 0.7, t + 0.05, 0.1);
-  g.gain.setTargetAtTime(0.0001, t + dur * 0.8, dur * 0.12);
-  f.connect(g).connect(bus);
-  for (const m of notes) {
-    for (const det of [-14, 0, 14]) {
-      const o = ctx.createOscillator();
-      o.type = 'sawtooth';
-      o.frequency.value = hz(m);
-      o.detune.value = det;
-      o.connect(f);
-      o.start(t);
-      o.stop(t + dur + 0.3);
-    }
+/** 응원 북 "둥": 큰북보다 높고 짧게, 끝이 둥글게 */
+function tom(t: number, vol: number, f: number) {
+  if (!ctx || !master) return;
+  for (const [ratio, amp] of [[1, 1], [1.6, 0.3]] as const) {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(f * ratio * 1.4, t);
+    o.frequency.exponentialRampToValueAtTime(f * ratio, t + 0.05);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol * amp, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+    o.connect(g).connect(master);
+    o.start(t);
+    o.stop(t + 0.3);
   }
 }
 
-/** 플럭: "똥" 하고 튕기는 짧은 신스 음 */
-function pluck(t: number, m: number, vol: number, bright: number) {
+/**
+ * 나팔(트럼펫) 한 음. 오르간처럼 납작하지 않게:
+ * 살짝 아래에서 밀어 올리듯 음이 시작되고, 소리가 "빠—" 하고 밝아졌다가 가라앉고, 긴 음엔 떨림을 준다.
+ */
+function horn(t: number, m: number, dur: number, vol: number) {
   if (!ctx || !master) return;
-  const o = ctx.createOscillator();
-  const f = ctx.createBiquadFilter();
+  const f = hz(m);
+  const fl = ctx.createBiquadFilter();
   const g = ctx.createGain();
-  o.type = 'square';
-  o.frequency.value = hz(m);
-  f.type = 'lowpass';
-  f.Q.value = 3;
-  f.frequency.setValueAtTime(bright, t);
-  f.frequency.exponentialRampToValueAtTime(400, t + 0.12);
+  fl.type = 'lowpass';
+  fl.Q.value = 1.2;
+  fl.frequency.setValueAtTime(350, t);
+  fl.frequency.exponentialRampToValueAtTime(3200, t + 0.04);
+  fl.frequency.setTargetAtTime(1700, t + 0.06, 0.08);
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-  o.connect(f).connect(g).connect(master);
-  o.start(t);
-  o.stop(t + 0.2);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.025);
+  g.gain.setTargetAtTime(vol * 0.75, t + 0.05, 0.06);
+  g.gain.setTargetAtTime(0.0001, t + dur - 0.03, 0.03);
+  fl.connect(g).connect(master);
+  const vib = ctx.createOscillator();
+  const vibAmt = ctx.createGain();
+  vib.frequency.value = 5.5;
+  vibAmt.gain.setValueAtTime(0, t);
+  if (dur > 0.3) vibAmt.gain.linearRampToValueAtTime(f * 0.008, t + dur); // 긴 음은 점점 떨리게
+  vib.connect(vibAmt);
+  for (const det of [-5, 5]) {
+    const o = ctx.createOscillator();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(f * 0.97, t); // 아래에서 밀어 올리듯
+    o.frequency.exponentialRampToValueAtTime(f, t + 0.03);
+    o.detune.value = det;
+    vibAmt.connect(o.frequency);
+    o.connect(fl);
+    o.start(t);
+    o.stop(t + dur + 0.15);
+  }
+  vib.start(t);
+  vib.stop(t + dur + 0.15);
 }
 
-/** 베이스: 통통 튀는 낮은 신스 */
-function bass(t: number, m: number, dur: number, vol: number) {
-  if (!ctx || !master) return;
-  const o = ctx.createOscillator();
-  const f = ctx.createBiquadFilter();
-  const g = ctx.createGain();
-  o.type = 'sawtooth';
-  o.frequency.value = hz(m);
-  f.type = 'lowpass';
-  f.Q.value = 2;
-  f.frequency.setValueAtTime(900, t);
-  f.frequency.exponentialRampToValueAtTime(250, t + dur);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(vol, t + 0.006);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(f).connect(g).connect(master);
-  o.start(t);
-  o.stop(t + dur + 0.02);
-}
-
-// ── 비트 ──
-// 코드 진행: F#m – D – A – E (K팝에서 자주 쓰는 6-4-1-5). 한 마디에 코드 하나.
-const CHORDS = [
-  [54, 57, 61],
-  [50, 54, 57],
-  [57, 61, 64],
-  [52, 56, 59],
-];
-const ARP = [0, 1, 2, 1, 2, 0, 1, 2]; // 아르페지오 순서
-const BPM = 124;
-const SP = 60 / BPM / 4; // 16분음 길이
-const GROW = 2.2; // 몇 초에 걸쳐 빌드업이 꼭대기에 닿나
+// ── 응원 북 ──
+// 야구장 응원처럼 "쿵, 쿵, 둥둥둥" (8분음 8칸 중 0·2·4·5·6에 친다). 공이 나오기 전까지 점점 세지고 빨라진다.
+const HITS = [1, 0, 1, 0, 1, 1, 1, 0];
+const BPM = 120;
+const EIGHTH = 60 / BPM / 2;
+const GROW = 2.2; // 몇 초에 걸쳐 가장 세지나
 
 let timer = 0;
 let step = 0;
 let nextT = 0;
-let buildFrom = 0; // 이번 빌드업이 시작된 시각
-let level = 0; // 나온 공 수(많을수록 전체가 조금씩 더 신남)
+let buildFrom = 0; // 이번에 세지기 시작한 시각
+let level = 0; // 나온 공 수(많을수록 전체가 조금씩 더 셈)
 
 function tick() {
-  if (!ready() || !ctx || !padBus) return;
+  if (!ready() || !ctx) return;
   if (nextT < ctx.currentTime - 0.1) nextT = ctx.currentTime; // 잠깐 멈췄다 오면 밀린 걸 한꺼번에 치지 않게
   while (nextT < ctx.currentTime + 0.12) {
     const t = nextT;
-    const i = step % 16;
-    const chord = CHORDS[Math.floor(step / 16) % 4];
+    const i = step % 8;
     const grow = Math.max(0, Math.min(1, (t - buildFrom) / GROW));
-
-    // 킥: 한 박에 한 번, 빌드업 끝 무렵엔 두 배로 빨라진다
-    if (i % 4 === 0 || (grow > 0.65 && i % 2 === 0)) kick(t, i % 4 === 0 ? 0.55 : 0.3 + grow * 0.15);
-    // 마디 첫 박에 화음을 깐다 (빌드업할수록 밝아짐)
-    if (i === 0) supersaw(t, chord.map((m) => m + 12), SP * 16, 0.028 + level * 0.002, 700 + grow * 1500, 1200 + grow * 3000, padBus);
-    // 베이스: 박과 박 사이에 통통
-    if (i % 4 === 2 || i % 4 === 3) bass(t, chord[0] - 12, SP * 0.9, 0.12);
-    // 아르페지오: 빌드업할수록 크고 밝아짐
-    const n = chord[ARP[i % 8]] + (i % 16 < 8 ? 24 : 12);
-    pluck(t, n, 0.015 + grow * 0.04 + level * 0.003, 1500 + grow * 4500);
-
-    nextT += SP;
+    const vol = 0.22 + grow * 0.25 + level * 0.02;
+    if (grow > 0.7) {
+      // 꼭대기 무렵엔 "둥둥둥둥" 몰아친다
+      tom(t, vol, 150);
+      tom(t + EIGHTH / 2, vol * 0.8, 165);
+    } else if (HITS[i]) {
+      if (i === 0 || i === 2) kick(t, vol + 0.1);
+      else tom(t, vol, i === 5 ? 165 : 150);
+    }
+    nextT += EIGHTH;
     step++;
   }
 }
-function beatStart() {
+function drumStart(at: number) {
   if (!ctx) return;
-  beatStop();
+  drumStop();
   step = 0;
-  nextT = buildFrom = ctx.currentTime + 0.05;
+  nextT = buildFrom = at;
   timer = window.setInterval(tick, 25);
   tick();
 }
-function beatStop() {
+function drumStop() {
   clearInterval(timer);
   timer = 0;
 }
 
-/** 추첨 시작: "슈웅~" 올라가는 소리와 함께 비트가 시작된다 */
+/** 추첨 시작: 나팔 "빠-밤!" 하고 응원 북이 시작된다 */
 export function soundStart() {
-  if (!ready() || !ctx || !master) return;
+  if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.02;
-  const o = ctx.createOscillator();
-  const f = ctx.createBiquadFilter();
-  const g = ctx.createGain();
-  o.type = 'sawtooth';
-  o.frequency.setValueAtTime(220, t);
-  o.frequency.exponentialRampToValueAtTime(880, t + 0.35);
-  f.type = 'lowpass';
-  f.frequency.setValueAtTime(600, t);
-  f.frequency.exponentialRampToValueAtTime(4000, t + 0.35);
-  g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.06, t + 0.2);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
-  o.connect(f).connect(g).connect(master);
-  o.start(t);
-  o.stop(t + 0.45);
+  horn(t, 67, 0.12, 0.07);
+  horn(t + 0.14, 72, 0.3, 0.08);
+  kick(t + 0.14, 0.5);
   level = 0;
-  beatStart();
+  drumStart(t + 0.6);
 }
 
-/** 공 하나가 나왔을 때 "짠!" (k번째일수록 한 음씩 올라간다). 빌드업은 처음부터 다시 */
+/** 공 하나가 나왔을 때 나팔 "빠밤!" (k번째일수록 한 음씩 올라간다). 북은 다시 작게부터 */
 export function soundPop(k: number) {
-  if (!ready() || !ctx || !master) return;
+  if (!ready() || !ctx) return;
   const t = ctx.currentTime + 0.01;
   const up = [0, 2, 4, 5, 7, 9][k % 6];
-  kick(t, 0.6);
-  supersaw(t, [69 + up, 73 + up, 76 + up], 0.45, 0.05, 5000, 900, master);
-  pluck(t, 81 + up, 0.06, 6000);
+  kick(t, 0.55);
+  horn(t, 67 + up, 0.09, 0.07);
+  horn(t + 0.1, 72 + up, 0.32, 0.08);
+  horn(t + 0.1, 76 + up, 0.32, 0.05); // 화음으로 두툼하게
   level = k + 1;
-  buildFrom = t + 0.25;
-  if (k >= 5) beatStop();
+  buildFrom = t + 0.5;
+  nextT = Math.max(nextT, t + 0.5);
+  if (k >= 5) drumStop();
 }
 
-/** 한 게임(6개)을 다 뽑았을 때: 짧은 후렴 멜로디 + 마무리 화음 */
+/**
+ * 한 게임(6개)을 다 뽑았을 때: 야구장 "차지(Charge)" 나팔 "따라라 딴~ 따 따—!"
+ * 옛 군대 나팔 신호에서 온 누구나 쓰는 가락이다.
+ */
 export function soundDone() {
-  beatStop();
-  if (!ready() || !ctx || !master) return;
-  const t = ctx.currentTime + 0.3;
-  [76, 78, 81, 85, 83, 81].forEach((m, i) => pluck(t + i * SP * 1.5, m, 0.06, 5000));
-  const end = t + 6 * SP * 1.5;
-  kick(end, 0.6);
-  supersaw(end, [57, 64, 69, 73, 76], 1.6, 0.045, 4500, 700, master);
+  drumStop();
+  if (!ready() || !ctx) return;
+  const t = ctx.currentTime + 0.35;
+  const n = 0.13; // 짧은 음 길이
+  const notes: [number, number, number][] = [
+    [0, 67, n], // 솔
+    [n, 72, n], // 도
+    [2 * n, 76, n], // 미
+    [3 * n, 79, 0.32], // 솔—
+    [3 * n + 0.36, 76, n], // 미
+    [4 * n + 0.38, 79, 0.9], // 솔————
+  ];
+  for (const [at, m, d] of notes) {
+    horn(t + at, m, d, 0.08);
+    horn(t + at, m - 12, d, 0.035); // 한 옥타브 아래를 겹쳐 힘 있게
+  }
+  kick(t + 3 * n, 0.45);
+  kick(t + 4 * n + 0.38, 0.6);
 }
 
 /** 화면을 떠나는 등 추첨이 중간에 멈출 때 */
 export function soundStop() {
-  beatStop();
+  drumStop();
 }
 
 // 다른 앱으로 가면 소리를 잠시 멈춘다
