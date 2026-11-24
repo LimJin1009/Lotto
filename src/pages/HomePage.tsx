@@ -16,7 +16,7 @@ import { extractPicks, personalNumbers, type PersonalInput } from '../lib/person
 import { applyFilter, loadFilter, saveFilter, type PickFilter } from '../lib/picks';
 import { randInt, randomNumbers } from '../lib/random';
 import { statsNumbers, type StatsStrategy } from '../lib/stats';
-import { isSoundOn, setSoundOn, soundDone, soundPop, soundStart, unlock } from '../lib/sound';
+import { isSoundOn, setSoundOn, soundDone, soundPop, soundStart, soundStop, unlock } from '../lib/sound';
 import { normalizeWish, wishNumbers } from '../lib/wish';
 import type { Draw, GenResult } from '../lib/types';
 
@@ -171,6 +171,7 @@ export function HomePage() {
   useEffect(
     () => () => {
       run.current++; // 화면을 떠나면 진행 중인 추첨을 멈춤
+      soundStop();
     },
     [],
   );
