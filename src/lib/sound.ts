@@ -308,7 +308,7 @@ function tick() {
     const bar = Math.floor(step / 8) % 4;
     const root = ROOTS[bar] + level; // 공 하나마다 반음씩 높아진다
     const grow = Math.max(0, Math.min(1, (t - buildFrom) / growSec()));
-    const vol = 0.26 + grow * 0.22 + level * 0.03; // 배경 북을 또렷하게
+    const vol = 0.36 + grow * 0.24 + level * 0.03; // 배경 북을 크게
     const drumF = hz(root - 12);
 
     // 심장 박동: 처음엔 "쿵… 쿵-쿵", 공이 나올수록 촘촘해진다
@@ -323,7 +323,7 @@ function tick() {
     // 반복 가락: 마림바 (장조 마디는 3도를 장3도로)
     let s = ARP[i];
     if (MAJOR3[bar] && s === 15) s = 16;
-    marimba(t, root + s - 12, 0.16 + grow * 0.1, 0.5);
+    marimba(t, root + s - 12, 0.24 + grow * 0.12, 0.5);
     if (level >= 3) marimba(t + e / 2, root + ARP[(i + 3) % 8] - 12, 0.07 + grow * 0.06, 0.3); // 3개부터: 사이사이 음이 더 끼어든다
     // 3개부터: 마디마다 트럼펫이 높은 음을 길게 불어 긴장을 끌어올린다
     if (level >= 3 && i === 0) {
@@ -377,14 +377,14 @@ export function soundPop(k: number) {
   const t = ctx.currentTime + 0.01;
   const up = k + 1; // 다음 반복 가락과 같은 높이로 올라간다
   const tf = 73.4 * 2 ** (up / 12);
-  timpani(t, 0.28, tf, 0.5); // 두-
-  timpani(t + 0.11, 0.5, tf * 1.335, 1.1); // 둥!
-  kick(t + 0.11, 0.7, 110, 40, 0.6);
+  timpani(t, 0.12, tf, 0.5); // 두-
+  timpani(t + 0.11, 0.2, tf * 1.335, 1.1); // 둥!
+  kick(t + 0.11, 0.3, 110, 40, 0.6);
   // 트럼펫 "따-다—!" 공이 나올수록 한 음씩 높아진다
-  trumpet(t, 69 + up, 0.11, 0.35, false);
-  trumpet(t + 0.11, 74 + up, 0.55, 0.42, true);
-  glock(t + 0.11, 86 + up, 0.06);
-  crowd(t + 0.11, 62 + up, 0.45, 0.08);
+  trumpet(t, 69 + up, 0.11, 0.16, false);
+  trumpet(t + 0.11, 74 + up, 0.55, 0.2, true);
+  glock(t + 0.11, 86 + up, 0.03);
+  crowd(t + 0.11, 62 + up, 0.45, 0.04);
   level = Math.min(5, k + 1);
   buildFrom = t + 0.5;
   nextT = Math.max(nextT, t + 0.5);
